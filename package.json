@@ -1,0 +1,12 @@
+{
+  "name": "notifly-repo-tools",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "format": "npx prettier --write \"**/*.{js,ts,tsx,jsx,json,md,css,scss,html,yml,yaml,sql,mdx}\"",
+    "format:check": "npx prettier --check \"**/*.{js,ts,tsx,jsx,json,md,css,scss,html,yml,yaml,sql,mdx}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.8.0"
+  }
+}

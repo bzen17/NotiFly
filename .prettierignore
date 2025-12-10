@@ -1,0 +1,17 @@
+node_modules
+dist
+build
+.next
+coverage
+.vscode
+*.lock
+*.log
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.terraform
+out
+.env
+*.env
+vendor
+**/node_modules
