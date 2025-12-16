@@ -2,7 +2,7 @@ import pino from 'pino';
 import { getRedis, closeRedis } from './clients/redis';
 import { getMongo, closeMongo } from './clients/mongo';
 import { getPgPool, closePg } from './clients/postgres';
-import { sendEmail } from './adapters/mockEmailAdapter';
+// Worker now calls the external delivery-adapters service via HTTP
 import stableHash from './utils/hash';
 import {
   LOG_LEVEL,
@@ -134,7 +134,22 @@ async function processMessage(redis: any, mongo: any, pg: any, msg: any) {
   }
 
   try {
-    const result = await sendEmail(recipient, payload);
+    // Build the delivery payload expected by delivery-adapters service
+    // Compose email fields from payload shape used in messages
+    const emailPayload = {
+      channel: 'email',
+      to: recipient,
+      subject: payload?.subject || payload?.title || '',
+      body: payload?.body || payload?.html || '',
+      metadata: payload?.metadata || payload?.meta || payload || {},
+      eventId,
+      tenantId,
+    };
+
+    // Call external delivery-adapters service via client
+    // The client centralizes fetch handling and the DELIVERY_ADAPTERS_URL env var
+    const { default: deliveryClient } = await import('./clients/deliveryAdapter');
+    const result = await deliveryClient.deliver(emailPayload);
     const now = new Date();
 
     // Write delivery row to Postgres

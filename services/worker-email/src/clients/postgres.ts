@@ -14,7 +14,6 @@ export function getPgPool() {
     const user = process.env.PG_USER;
     const pass = process.env.PG_PASS;
     const db = process.env.PG_DB;
-    console.log('postgres', host, port, user, db);
     if (host && user && pass && db) {
       const u = encodeURIComponent(user);
       const p = encodeURIComponent(pass);
