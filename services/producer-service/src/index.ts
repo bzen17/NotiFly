@@ -1,54 +1,53 @@
 import express from 'express';
-import dotenv from 'dotenv';
+
 import { createClient } from 'redis';
 import { MongoClient } from 'mongodb';
 import crypto from 'crypto';
 
 async function genUuid(): Promise<string> {
-  // Prefer built-in `crypto.randomUUID` when available (Node 14.17+).
-  // This avoids depending on ESM-only `uuid` when running under CommonJS dev tools.
+  // Use `crypto.randomUUID` when available, otherwise dynamically import `uuid` as a fallback.
   if (typeof (crypto as any).randomUUID === 'function') {
     return (crypto as any).randomUUID();
   }
 
-  // Dynamic import is supported in CommonJS and avoids `require()` of ESM modules.
   const mod = await import('uuid');
-  // `uuid` v9+ exports `v4` as a named export; older packaging may differ.
   const v4 = (mod as any).v4 ?? (mod as any).default?.v4 ?? (mod as any).default;
   if (typeof v4 === 'function') return v4();
 
   throw new Error('Unable to generate uuid: no compatible generator found');
 }
 
-dotenv.config();
+import { REDIS_URL, MONGO_URI, MONGO_DB, PORT as CFG_PORT } from './config';
 
 const app = express();
 app.use(express.json());
-const PORT = process.env.PORT || 3001;
+const PORT = Number(CFG_PORT || process.env.PORT || 3001);
 
-const redis = createClient({
-  url: `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379}`,
-});
+const redis = createClient({ url: REDIS_URL });
 
-const mongo = new MongoClient(process.env.MONGO_URI || 'mongodb://localhost:27017');
+const mongo = new MongoClient(MONGO_URI);
 let eventsCol: any;
 
-app.post('/v1/notifications/send', async (req, res) => {
-  const payload = req.body;
-  // minimal validation here — Copilot will flesh out
-  const eventId = await genUuid();
-  const event = { _id: eventId, ...payload, status: 'queued', createdAt: new Date() };
-  await eventsCol.insertOne(event);
-  // publish a lightweight pointer to Redis stream "notifications.incoming"
-  await redis.xAdd('notifications.incoming', '*', { eventId });
+import { sendNotification } from './handlers/sendNotification';
 
-  return res.status(202).json({ eventId, status: 'queued' });
+app.post('/v1/notifications/send', async (req, res) => {
+  try {
+    const result = await sendNotification(req.body, { db: mongo.db(MONGO_DB), redis, genUuid });
+    return res.status(202).json({ eventId: result.eventId });
+  } catch (err: any) {
+    if (err && err.message === 'validation_error') {
+      console.warn('Validation failed for incoming notification', err.details);
+      return res.status(400).json({ error: 'validation_error', details: err.details });
+    }
+    console.error('Unhandled error in /v1/notifications/send', err);
+    return res.status(500).json({ error: 'internal_error' });
+  }
 });
 
 async function startServer() {
   await redis.connect();
   await mongo.connect();
-  eventsCol = mongo.db('notifly').collection('events');
+  eventsCol = mongo.db(MONGO_DB).collection('events');
 
   app.listen(PORT, () => {
     console.log(`Producer service listening on ${PORT}`);

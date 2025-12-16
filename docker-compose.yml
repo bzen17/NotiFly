@@ -1,13 +1,13 @@
 version: '3.8'
 services:
   redis:
-    image: redis:7
+    image: redis:8.4.0
     ports:
       - '6379:6379'
     command: ['redis-server', '--save', '', '--appendonly', 'no']
 
   postgres:
-    image: postgres:15
+    image: postgres:18
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -15,13 +15,16 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
 
   mongo:
-    image: mongo:6
+    image: mongo:8.2.2
     command: ['mongod', '--bind_ip_all']
     ports:
       - '27017:27017'
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
     volumes:
       - mongodata:/data/db
 
