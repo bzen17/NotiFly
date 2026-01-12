@@ -1,5 +1,5 @@
 {
-  "name": "notifly-repo-tools",
+  "name": "notifly",
   "private": true,
   "version": "1.0.0",
   "scripts": {
@@ -7,6 +7,10 @@
     "format:check": "npx prettier --check \"**/*.{js,ts,tsx,jsx,json,md,css,scss,html,yml,yaml,sql,mdx}\""
   },
   "devDependencies": {
-    "prettier": "^3.8.0"
-  }
+    "prettier": "^3.7.4"
+  },
+  "workspaces": [
+    "services/*",
+    "libs/*"
+  ]
 }

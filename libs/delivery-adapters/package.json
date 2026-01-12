@@ -1,0 +1,28 @@
+{
+  "name": "@notifly/delivery-adapters",
+  "version": "0.1.0",
+  "description": "Pure library of thin adapters for email, sms and push providers (NotiFlow)",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": true,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@sendgrid/mail": "^8.0.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^25.0.6",
+    "typescript": "^5.9.3"
+  }
+}

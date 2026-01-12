@@ -1,6 +1,4 @@
-import { redis, ensureConsumerGroup } from './clients/redis';
-import { connectMongo } from './clients/mongo';
-import { v4 as uuidv4 } from 'uuid';
+import { connectDatastores, getRedis, getMongo, ensureConsumerGroup } from './config/db';
 import { renderTemplate } from './templates';
 import {
   CONSUMER_GROUP,
@@ -11,7 +9,9 @@ import {
   STREAM_PUSH,
   DEDUPE_TTL_SECONDS,
   POLL_BLOCK_MS,
-} from './config';
+  MONGO_DB,
+} from './config/env';
+import logger from './utils/logger';
 import { EventPayload } from './types';
 
 function parseFields(fields: string[]) {
@@ -22,9 +22,10 @@ function parseFields(fields: string[]) {
   return out;
 }
 
-async function dedupeEvent(eventId: string) {
+async function dedupeEvent(redis: any, eventId: string) {
   const key = `dedupe:${eventId}`;
   const res = await redis.set(key, '1', { NX: true, EX: DEDUPE_TTL_SECONDS });
+  // node-redis returns 'OK' when key set, null when not set
   return res === 'OK';
 }
 
@@ -42,10 +43,10 @@ function resolveChannelsForRecipient(recipientEntry: any): string[] {
 }
 
 export async function runRouter() {
-  const db = await connectMongo();
+  const { mongo: dbClient, redis } = await connectDatastores();
   await ensureConsumerGroup(INCOMING_STREAM, CONSUMER_GROUP);
 
-  console.log('Router started, listening on', INCOMING_STREAM);
+  logger.info({ stream: INCOMING_STREAM }, 'Router started, listening');
 
   while (true) {
     try {
@@ -76,16 +77,14 @@ export async function runRouter() {
 
           // Determine canonical event id
           const eventId = explicitEventId || event.eventId || id;
-          console.log('Parsed incoming message', {
-            redisId: id,
-            explicitEventId,
-            eventId,
-            fields: f,
-          });
+          logger.debug(
+            { redisId: id, explicitEventId, eventId, fields: f },
+            'Parsed incoming message',
+          );
 
-          const allowed = await dedupeEvent(eventId);
+          const allowed = await dedupeEvent(redis, eventId);
           if (!allowed) {
-            console.log('Duplicate event skipped', eventId);
+            logger.info({ eventId }, 'Duplicate event skipped');
             await redis.xAck(INCOMING_STREAM, CONSUMER_GROUP, id);
             continue;
           }
@@ -93,10 +92,14 @@ export async function runRouter() {
           // Load the full event document from MongoDB when available
           let dbEvent = event;
           if (eventId) {
-            const coll = db.collection('events');
+            const mongo = dbClient;
+            const coll =
+              typeof (mongo as any).db === 'function'
+                ? (mongo as any).db(MONGO_DB).collection('events')
+                : (mongo as any).collection('events');
             const found = await coll.findOne({ _id: eventId });
             if (found) dbEvent = { ...(found as any), ...(event || {}) };
-            console.log('Loaded event from mongo', { eventId, found: !!found });
+            logger.debug({ eventId, found: !!found }, 'Loaded event from mongo');
           }
           // enrich with template
           if (dbEvent.templateId) {
@@ -105,7 +108,7 @@ export async function runRouter() {
           // Expand recipients and fan-out to channel streams
           const recipients = dbEvent.recipients || [];
           if (!recipients || recipients.length === 0) {
-            console.log('No recipients found for event, skipping fan-out', { eventId });
+            logger.warn({ eventId }, 'No recipients found for event, skipping fan-out');
           }
           for (const r of recipients) {
             const channels = resolveChannelsForRecipient(r);
@@ -126,19 +129,15 @@ export async function runRouter() {
               try {
                 const msgStr = JSON.stringify(msg);
                 await redis.xAdd(targetStream, '*', { body: msgStr });
-                console.log('Routed to channel stream', {
-                  eventId,
-                  channel: ch,
-                  recipient: r.address || r,
-                  stream: targetStream,
-                });
+                logger.info(
+                  { eventId, channel: ch, recipient: r.address || r, stream: targetStream },
+                  'Routed to channel stream',
+                );
               } catch (err) {
-                console.error('Failed to publish to channel stream', {
-                  err,
-                  targetStream,
-                  eventId,
-                  channel: ch,
-                });
+                logger.error(
+                  { err, targetStream, eventId, channel: ch },
+                  'Failed to publish to channel stream',
+                );
                 // do not ack incoming so it can be retried
               }
             }
@@ -149,7 +148,7 @@ export async function runRouter() {
         }
       }
     } catch (err) {
-      console.error('Router loop error', err);
+      logger.error({ err }, 'Router loop error');
       await new Promise((r) => setTimeout(r, 1000));
     }
   }
