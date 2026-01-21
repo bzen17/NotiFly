@@ -1,19 +1,14 @@
-# Router Service
+# Router Service (developer notes)
 
-Consumes `notifications.incoming` Redis stream, loads events from MongoDB, optionally renders a Handlebars template, expands recipients into deliveries, inserts delivery rows into Postgres, and publishes messages to channel-specific Redis streams.
+This file contains developer-level notes and configuration details for `router-service`.
 
-Environment variables (see `.env.example`):
+Important environment variables (see `.env.example`)
+- `REDIS_URL` or `REDIS_HOST`/`REDIS_PORT`/`REDIS_PASSWORD`
+- `MONGO_URI`
+- `PG_CONNECTION`
+- `CONSUMER_GROUP`, `CONSUMER_NAME`
 
-- `REDIS_URL` - Optional full Redis connection string (override)
-- `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` - Redis host/port/password used to construct `REDIS_URL` when not provided
-- `MONGO_URI` - Optional full MongoDB connection string (override)
-- `MONGO_HOST` / `MONGO_PORT` / `MONGO_USER` / `MONGO_PASS` / `MONGO_DB` - Mongo parts used when `MONGO_URI` is not provided
-- `PG_CONNECTION` - Optional full Postgres connection string (override)
-- `PG_HOST` / `PG_PORT` / `PG_USER` / `PG_PASS` / `PG_DB` - Postgres parts used when `PG_CONNECTION` is not provided
-- `CONSUMER_GROUP` - Redis consumer group name
-- `CONSUMER_NAME` - consumer instance name
-
-Run locally:
+Run & test locally
 
 ```bash
 cd services/router-service
@@ -21,7 +16,12 @@ npm install
 npm run dev
 ```
 
-Notes:
+DB schema notes
+- Ensure a `deliveries` Postgres table exists and includes at minimum: `id`, `campaign_id`/`event_id`, `recipient`, `channel`, `status`, `payload`, `created_at`.
 
-- Ensure the Postgres `deliveries` table exists with appropriate columns: `id uuid primary key`, `event_id text`, `recipient text`, `channel text`, `status text`, `payload jsonb`, `created_at timestamptz`.
-- Templates are loaded from MongoDB collection `templates` by `_id` and should have a `body` string.
+Behavioral notes
+- Templates are read from MongoDB `templates` collection when campaign payloads reference a template id.
+- When `requeue` flags are present, router will publish targeted incoming pointers for single-recipient requeues.
+
+Troubleshooting
+- If messages are not published to channel streams, confirm the Redis connection and that the stream keys exist.

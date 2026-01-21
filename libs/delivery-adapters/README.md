@@ -1,30 +1,30 @@
 # delivery-adapters
 
-Pure TypeScript library providing thin, deterministic adapters for email, SMS and push providers.
+Purpose
+- Lightweight, deterministic adapters for sending messages to email, SMS and push providers. Designed to be pure and easily testable; adapters should not implement retry or queueing logic.
 
-Rules:
+Supported adapters
+- `SendGridAdapter`, `SESAdapter` (email)
+- `MockEmailAdapter` (email, deterministic for tests)
+- `TwilioAdapter`, `MockSmsAdapter` (sms)
+- `FcmAdapter` (push)
 
-- Library is pure (no servers, no retries, no DLQ, no queues, no persistence, no business rules).
-
-- Environment variables used (adapters simulate behavior; presence/absence affects results):
+Environment (simulated provider configs)
 - `SENDGRID_API_KEY`, `SENDGRID_FROM`
 - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM`
 - `FCM_SERVER_KEY`
 
-Adapters:
-
-- `SendGridAdapter` (email) — env-driven simulation
-- `SESAdapter` (email) — stub, throws `Not implemented`
-- `MockEmailAdapter` (email) — deterministic mock
-- `TwilioAdapter` (sms) — env-driven simulation
-- `MockSmsAdapter` (sms) — deterministic mock
-- `FcmAdapter` (push) — env-driven simulation
-
-Usage example (preferred import from package entry):
+Usage
 
 ```ts
 import { SendGridAdapter } from '@notifly/delivery-adapters';
 
-const a = new SendGridAdapter();
-await a.send({ to: 'user@example.com', subject: 'Hi', text: 'Hello' });
+const adapter = new SendGridAdapter();
+await adapter.send({ to: 'user@example.com', subject: 'Hi', text: 'Hello' });
 ```
+
+Testing
+- Use `Mock*` adapters for deterministic tests. Adapters are intentionally synchronous-friendly and side-effect minimal to simplify unit tests.
+
+Notes
+- Do not put business logic (retry, DLQ, dedupe) in adapters. Keep them as thin providers interfaces to allow provider substitution and easy mocking.

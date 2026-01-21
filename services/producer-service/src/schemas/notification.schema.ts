@@ -3,6 +3,7 @@ import Joi from 'joi';
 
 export const notificationSchema = Joi.object({
   tenantId: Joi.string().required(),
+  name: Joi.string().required(),
   channel: Joi.string().valid('email', 'sms', 'push').required(),
   recipients: Joi.array().items(Joi.string()).min(1).required(),
   payload: Joi.object().required(),

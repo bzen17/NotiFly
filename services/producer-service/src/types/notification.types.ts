@@ -5,5 +5,5 @@ export interface NotificationPayload {
 }
 
 export interface SendResult {
-  eventId: string;
+  campaignId: string;
 }

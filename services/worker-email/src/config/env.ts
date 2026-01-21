@@ -51,6 +51,11 @@ export const CONSUMER = process.env.CONSUMER || 'email-consumer-1';
 
 export const USE_MOCK = process.env.USE_MOCK === 'true' || process.env.USE_MOCK === '1';
 
+export const RETRY_CONSUMER_ENABLED =
+  process.env.RETRY_CONSUMER_ENABLED === 'false' || process.env.RETRY_CONSUMER_ENABLED === '0'
+    ? false
+    : true;
+
 export const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || '';
 export const SENDGRID_FROM = process.env.SENDGRID_FROM || process.env.SENDGRID_FROM_EMAIL || '';
 

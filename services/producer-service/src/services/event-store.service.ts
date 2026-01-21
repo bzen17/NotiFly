@@ -11,5 +11,5 @@ export async function initEventStore(mongoUri: string) {
 
 export function getEventCollection(dbName: string) {
   if (!client) throw new Error('Event store not initialized');
-  return client.db(dbName).collection('events');
+  return client.db(dbName).collection('campaigns');
 }

@@ -1,13 +1,23 @@
 import { getRedis } from '../config/db';
 import logger from '../utils/logger';
+import { STREAMS } from '../constants';
 
+/**
+ * Publish an object payload to a Redis stream. Supports node-redis v4 (`xAdd`),
+ * older clients exposing `xadd`, and falls back to PUB/SUB `publish` when necessary.
+ *
+ * `streamName` can be one of the well-known streams in `STREAMS` or a custom stream.
+ */
 export async function publishToStream(streamName: string, payload: any) {
-  // Publish a message to a Redis Stream using XADD. Accepts an object payload which
-  // will be stored under the `payload` field as a JSON string. Tries to support
-  // both node-redis v4 (`xAdd`) and older clients exposing `xadd`.
   const redis = await getRedis();
 
   const fields = { payload: JSON.stringify(payload) };
+
+  try {
+    logger.info({ streamName, payload }, 'Publishing payload to stream');
+  } catch (e) {
+    // ignore logging errors
+  }
 
   if (typeof redis.xAdd === 'function') {
     logger.debug({ streamName }, 'Using redis.xAdd to publish payload');
@@ -20,7 +30,6 @@ export async function publishToStream(streamName: string, payload: any) {
     return (redis as any).xadd(streamName, '*', ...flat);
   }
 
-  // Fallback: try PUB/SUB publish
   if (typeof redis.publish === 'function') {
     try {
       await redis.publish(streamName, JSON.stringify(payload));
@@ -32,7 +41,7 @@ export async function publishToStream(streamName: string, payload: any) {
     }
   }
 
-  throw new Error('Redis client does not support XADD or PUBLISH; cannot publish to stream');
+  throw new Error(`Redis client does not support XADD or PUBLISH; cannot publish to stream ${streamName}`);
 }
 
 export default { publishToStream };

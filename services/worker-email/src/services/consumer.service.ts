@@ -7,6 +7,7 @@ import { allowRate } from './rate-limit.service';
 import { scheduleRetry, shouldRetry } from './retry.service';
 import { writeDlq } from './dlq.service';
 import { markDeliveryStatus } from './delivery-status.service';
+import { STATUS } from '../constants';
 
 export async function processMessage(redis: any, mongo: any, pg: any, msg: any) {
   const [id, fields] = msg;
@@ -22,12 +23,10 @@ export async function processMessage(redis: any, mongo: any, pg: any, msg: any) 
     }
   } else {
     body = {};
-    if (fields?.eventId) body.eventId = fields.eventId;
-    if (fields?.event_id) body.eventId = body.eventId || fields.event_id;
+    if (fields?.campaignId) body.campaignId = fields.campaignId;
     if (fields?.recipient) body.recipient = fields.recipient;
     if (fields?.to) body.recipient = body.recipient || fields.to;
     if (fields?.tenantId) body.tenantId = fields.tenantId;
-    if (fields?.tenant_id) body.tenantId = body.tenantId || fields.tenant_id;
     if (fields?.payload) {
       try {
         body.payload =
@@ -44,24 +43,27 @@ export async function processMessage(redis: any, mongo: any, pg: any, msg: any) 
     return;
   }
 
-  const eventId = body.eventId;
+  const campaignId = body.campaignId;
   const recipient = body.recipient;
   const tenantId = body.tenantId;
   const payload = body.payload || {};
   const attempt = Number(body.attempt || 0);
 
-  if (!eventId || !recipient) {
-    log.warn({ id, body }, 'invalid message missing eventId/recipient');
+  if (!campaignId || !recipient) {
+    log.warn({ id, body }, 'invalid message missing campaignId/recipient');
     return;
   }
 
-  log.info({ eventId, id, recipient }, 'Email worker received message');
+  log.info({ campaignId, id, recipient }, 'Email worker received message');
 
-  // Dedupe per event+recipient
-  const dedupKey = `dedupe:${stableHash(eventId + '|' + recipient)}`;
+  // Dedupe per campaign+recipient+attempt to avoid skipping scheduled retries
+  // (previously dedupe ignored attempt which caused retries to be skipped while the original
+  // dedupe key was still valid). Including attempt keeps dedupe semantics for concurrent
+  // duplicates while allowing separate retry attempts.
+  const dedupKey = `dedupe:${stableHash(campaignId + '|' + recipient + '|' + String(attempt))}`;
   const notSet = await setDedupKey(redis, dedupKey, DEDUPE_TTL);
   if (!notSet) {
-    log.info({ eventId, recipient }, 'duplicate delivery, skipping');
+    log.info({ campaignId, recipient }, 'duplicate delivery, skipping');
     return;
   }
 
@@ -69,7 +71,7 @@ export async function processMessage(redis: any, mongo: any, pg: any, msg: any) 
   const allowed = await allowRate(redis, tenantId || 'default');
   if (!allowed) {
     log.info({ tenant: tenantId }, 'rate limit exceeded, scheduling retry');
-    await scheduleRetry(redis, { _id: eventId, tenantId }, attempt + 1);
+    await scheduleRetry(redis, { _id: campaignId, tenantId }, attempt + 1, mongo);
     return;
   }
 
@@ -81,7 +83,7 @@ export async function processMessage(redis: any, mongo: any, pg: any, msg: any) 
       body: payload?.body || payload?.html || '',
       from: payload?.from || payload?.fromAddress || undefined,
       metadata: payload?.metadata || payload?.meta || payload || {},
-      eventId,
+      campaignId,
       tenantId,
     };
 
@@ -99,21 +101,27 @@ export async function processMessage(redis: any, mongo: any, pg: any, msg: any) 
       success: resp.success,
       code: (resp as any).errorCode || undefined,
       providerResponse: (resp as any).rawResponse,
-      error: resp.success ? undefined : (resp as any).errorCode || 'FAILED',
+      error: resp.success ? undefined : (resp as any).errorCode || STATUS.FAILED,
     };
-    const now = new Date();
-
-    // Write delivery row to Postgres
+    
+    // Write delivery row to Postgres. Use upsert so retries update existing row
     try {
       await pg.query(
-        'INSERT INTO deliveries(event_id, tenant_id, recipient, status, code, created_at) VALUES($1,$2,$3,$4,$5,$6)',
+        `INSERT INTO deliveries(campaign_id, tenant_id, recipient, channel, status, code, created_at, updated_at, attempt_count)
+         VALUES($1,$2,$3,$4,$5,$6,clock_timestamp()::timestamptz(6),clock_timestamp()::timestamptz(6),1)
+         ON CONFLICT (campaign_id, recipient) DO UPDATE SET
+           channel = EXCLUDED.channel,
+           status = EXCLUDED.status,
+           code = EXCLUDED.code,
+           updated_at = clock_timestamp()::timestamptz(6),
+           attempt_count = COALESCE(deliveries.attempt_count, 0) + 1`,
         [
-          eventId,
+          campaignId,
           tenantId || null,
           recipient,
-          result.success ? 'delivered' : 'failed',
+          'email',
+          result.success ? STATUS.DELIVERED : STATUS.FAILED,
           result.code || null,
-          now,
         ],
       );
     } catch (err) {
@@ -123,32 +131,46 @@ export async function processMessage(redis: any, mongo: any, pg: any, msg: any) 
     if (!result.success) {
       const nextAttempt = attempt + 1;
       if (nextAttempt > MAX_RETRIES) {
-        log.warn({ eventId, recipient }, 'Max retries exceeded; sending to DLQ');
-        await writeDlq(redis, { eventId, recipient, error: result.error || 'failed' });
+        log.warn({ campaignId, recipient }, 'Max retries exceeded; sending to DLQ');
+        await writeDlq(redis, {
+          campaignId,
+          recipient,
+          error: result.error || STATUS.FAILED,
+          payload,
+          tenantId,
+          attempt,
+        });
       } else {
-        await scheduleRetry(redis, { _id: eventId, tenantId, recipient }, nextAttempt);
+        await scheduleRetry(redis, { _id: campaignId, tenantId, recipient }, nextAttempt, mongo);
         log.info(
-          { eventId, recipient, attempt: nextAttempt },
+          { campaignId, recipient, attempt: nextAttempt },
           'Scheduled retry for failed delivery',
         );
       }
     } else {
-      // Update event status on success
-      try {
-        await markDeliveryStatus(mongo, eventId, 'delivered');
-      } catch (err) {
-        log.warn({ err }, 'Could not update event status in Mongo');
-      }
-      log.info({ eventId, recipient }, 'Delivery succeeded');
+      // Update campaign status on success
+        try {
+          await markDeliveryStatus(mongo, campaignId, STATUS.DELIVERED);
+        } catch (err) {
+          log.warn({ err }, 'Could not update campaign status in Mongo');
+        }
+      log.info({ campaignId, recipient }, 'Delivery succeeded');
     }
   } catch (err: any) {
-    log.error({ err, eventId, recipient }, 'error sending to recipient');
+    log.error({ err, campaignId, recipient }, 'error sending to recipient');
     const nextAttempt = attempt + 1;
     if (nextAttempt > MAX_RETRIES) {
-      await writeDlq(redis, { eventId, recipient, error: String(err) });
-      log.warn({ eventId, recipient }, 'Moved to DLQ after repeated failures');
+      await writeDlq(redis, {
+        campaignId,
+        recipient,
+        error: String(err),
+        payload,
+        tenantId,
+        attempt,
+      });
+      log.warn({ campaignId, recipient }, 'Moved to DLQ after repeated failures');
     } else {
-      await scheduleRetry(redis, { _id: eventId, tenantId, recipient }, nextAttempt);
+      await scheduleRetry(redis, { _id: campaignId, tenantId, recipient }, nextAttempt, mongo);
     }
   }
 }

@@ -21,4 +21,13 @@ export const MONGO_URI =
     ? `mongodb://${encodeURIComponent(MONGO_USER)}:${encodeURIComponent(MONGO_PASS)}@${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}?authSource=admin`
     : `mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}`);
 
-export default { PORT, REDIS_URL, MONGO_URI, MONGO_DB };
+// Postgres: prefer full connection string override, otherwise build from parts
+export const PG_HOST = process.env.PG_HOST || 'localhost';
+export const PG_PORT = process.env.PG_PORT || '5432';
+export const PG_USER = process.env.PG_USER || 'postgres';
+export const PG_PASS = process.env.PG_PASS || process.env.PG_PASSWORD || 'postgres';
+export const PG_DB = process.env.PG_DB || 'notifly';
+export const PG_CONNECTION =
+  process.env.PG_CONNECTION ||
+  process.env.DATABASE_URL ||
+  `postgresql://${encodeURIComponent(PG_USER)}:${encodeURIComponent(PG_PASS)}@${PG_HOST}:${PG_PORT}/${PG_DB}`;

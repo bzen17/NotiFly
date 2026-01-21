@@ -1,6 +1,6 @@
-export type EventPayload = {
+export type CampaignPayload = {
   _id?: string;
-  eventId: string;
+  campaignId: string;
   templateId?: string;
   payload?: Record<string, any>;
   recipients?: Array<{ address: string; channels: string[] | string }>;
@@ -9,7 +9,7 @@ export type EventPayload = {
 
 export type DeliveryRow = {
   id: string;
-  event_id: string;
+  campaign_id: string;
   recipient: string;
   channel: string;
   status: string;

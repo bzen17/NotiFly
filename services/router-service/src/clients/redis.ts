@@ -1,14 +1,15 @@
 import { createClient, RedisClientType } from 'redis';
-import { REDIS_URL } from '../config';
+import { REDIS_URL } from '../config/env';
+import logger from '../utils/logger';
 
 let client: RedisClientType | null = null;
 
 export function getRedisClient(): RedisClientType {
   if (client) return client;
   client = createClient({ url: REDIS_URL });
-  client.on('error', (err) => console.warn('Redis client error', err));
+  client.on('error', (err) => logger.warn({ err }, 'Redis client error'));
   // start connecting in background; callers should handle readiness if needed
-  client.connect().catch((err) => console.warn('Redis connect failed', err));
+  client.connect().catch((err) => logger.warn({ err }, 'Redis connect failed'));
   return client;
 }
 
@@ -17,7 +18,7 @@ export const redis = getRedisClient();
 export async function ensureConsumerGroup(stream: string, group: string) {
   try {
     await redis.xGroupCreate(stream, group, '$', { MKSTREAM: true });
-    console.log('Created consumer group', group, 'for', stream);
+    logger.info({ group, stream }, 'Created consumer group');
   } catch (err: any) {
     const msg = String(err?.message || err);
     if (msg.includes('BUSYGROUP')) return;

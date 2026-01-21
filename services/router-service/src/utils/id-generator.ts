@@ -1,5 +1,5 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 export function generateId(prefix = '') {
-  return `${prefix}${uuidv4()}`;
+  return `${prefix}${randomUUID()}`;
 }

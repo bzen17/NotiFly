@@ -1,5 +1,5 @@
 export interface EmailPayload {
-  eventId: string;
+  campaignId: string;
   tenantId?: string;
   to: string;
   subject?: string;

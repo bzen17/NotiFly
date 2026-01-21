@@ -31,7 +31,7 @@ runEmailConsumer()
   .then(() => {
     log.info('consumer stopped');
   })
-  .catch((err) => {
+  .catch((err: any) => {
     log.error({ err }, 'consumer crashed');
     process.exit(1);
   });

@@ -1,0 +1,42 @@
+# Node
+node_modules/
+
+# Next.js build
+.next/
+.next/cache/
+out/
+dist/
+
+# Local env files
+.env
+.env.*
+.env.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+
+# TypeScript
+*.tsbuildinfo
+
+# Testing
+coverage/
+
+# Misc caches
+.cache/
+.parcel-cache/
+.turbo/
+
+# Editor temp files
+*.swp
+
+# ESLint cache
+.eslintcache
