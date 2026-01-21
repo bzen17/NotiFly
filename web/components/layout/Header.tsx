@@ -90,7 +90,12 @@ export default function Header({ onToggleSidebar }: { onToggleSidebar?: () => vo
               anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
               transformOrigin={{ vertical: 'top', horizontal: 'right' }}
             >
-              <MenuItem onClick={() => { handleAvatarClose(); handleLogout(); }}>
+              <MenuItem
+                onClick={() => {
+                  handleAvatarClose();
+                  handleLogout();
+                }}
+              >
                 <ExitToAppIcon fontSize="small" sx={{ mr: 1 }} />
                 Logout
               </MenuItem>

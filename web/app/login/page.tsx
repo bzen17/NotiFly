@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../lib/auth';
@@ -33,7 +33,12 @@ export default function LoginPage() {
       localStorage.setItem('refreshToken', json.refreshToken);
       try {
         const payload = JSON.parse(atob(json.accessToken.split('.')[1]));
-        setUser({ id: payload.sub, email: payload.email, role: payload.role, tenantId: payload.tenantId });
+        setUser({
+          id: payload.sub,
+          email: payload.email,
+          role: payload.role,
+          tenantId: payload.tenantId,
+        });
       } catch (e) {}
       router.push('/');
     } catch (err: any) {
@@ -47,12 +52,42 @@ export default function LoginPage() {
         <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
           <LockOutlinedIcon />
         </Avatar>
-        <Typography component="h1" variant="h5">Sign in</Typography>
+        <Typography component="h1" variant="h5">
+          Sign in
+        </Typography>
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-          <TextField margin="normal" required fullWidth id="email" label="Email Address" name="email" autoComplete="email" autoFocus value={email} onChange={(e) => setEmail(e.target.value)} />
-          <TextField margin="normal" required fullWidth name="password" label="Password" type="password" id="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
-          {error && <Typography color="error" variant="body2">{error}</Typography>}
-          <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>Sign In</Button>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="email"
+            label="Email Address"
+            name="email"
+            autoComplete="email"
+            autoFocus
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            name="password"
+            label="Password"
+            type="password"
+            id="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          {error && (
+            <Typography color="error" variant="body2">
+              {error}
+            </Typography>
+          )}
+          <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
+            Sign In
+          </Button>
           <Link href="/signup">Don't have an account? Sign up</Link>
         </Box>
       </Box>

@@ -41,7 +41,9 @@ export async function publishToStream(streamName: string, payload: any) {
     }
   }
 
-  throw new Error(`Redis client does not support XADD or PUBLISH; cannot publish to stream ${streamName}`);
+  throw new Error(
+    `Redis client does not support XADD or PUBLISH; cannot publish to stream ${streamName}`,
+  );
 }
 
 export default { publishToStream };

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -22,8 +22,10 @@ function getStoredTokens() {
 
 function setStoredTokens(accessToken?: string | null, refreshToken?: string | null) {
   try {
-    if (accessToken) localStorage.setItem('accessToken', accessToken); else localStorage.removeItem('accessToken');
-    if (refreshToken) localStorage.setItem('refreshToken', refreshToken); else localStorage.removeItem('refreshToken');
+    if (accessToken) localStorage.setItem('accessToken', accessToken);
+    else localStorage.removeItem('accessToken');
+    if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+    else localStorage.removeItem('refreshToken');
   } catch (e) {}
 }
 
@@ -50,7 +52,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // naive decode for user email/role
         try {
           const payload = JSON.parse(atob(accessToken.split('.')[1]));
-          if (mounted) setState({ user: { id: payload.sub, email: payload.email, role: payload.role, tenantId: payload.tenantId }, ready: true });
+          if (mounted)
+            setState({
+              user: {
+                id: payload.sub,
+                email: payload.email,
+                role: payload.role,
+                tenantId: payload.tenantId,
+              },
+              ready: true,
+            });
           return;
         } catch (e) {}
       }
@@ -59,7 +70,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const json = await doRefresh(refreshToken);
           setStoredTokens(json.accessToken, json.refreshToken);
           const payload = JSON.parse(atob(json.accessToken.split('.')[1]));
-          if (mounted) setState({ user: { id: payload.sub, email: payload.email, role: payload.role, tenantId: payload.tenantId }, ready: true });
+          if (mounted)
+            setState({
+              user: {
+                id: payload.sub,
+                email: payload.email,
+                role: payload.role,
+                tenantId: payload.tenantId,
+              },
+              ready: true,
+            });
           return;
         } catch (e) {
           setStoredTokens(null, null);
@@ -107,7 +127,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ state, setUser, fetchWithAuth }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ state, setUser, fetchWithAuth }}>
+      {children}
+    </AuthContext.Provider>
   );
 }
 

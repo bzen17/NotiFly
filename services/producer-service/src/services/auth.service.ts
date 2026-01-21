@@ -31,7 +31,14 @@ function usersColl() {
  * @param extra - additional fields to merge into user document
  * @returns minimal public user object
  */
-export async function createUser(email: string, password: string, name: string, role = ROLES.TENANT, tenantId?: string, extra: any = {}) {
+export async function createUser(
+  email: string,
+  password: string,
+  name: string,
+  role = ROLES.TENANT,
+  tenantId?: string,
+  extra: any = {},
+) {
   const hashed = await bcrypt.hash(password, 10);
   const doc: UserRecord = { email, passwordHash: hashed, role } as any;
   (doc as any).name = name;
@@ -57,8 +64,16 @@ export async function verifyUserPassword(user: any, password: string) {
  * @param user - user object containing at minimum an id/email/role
  */
 export function generateAccessToken(user: any) {
-  const payload: any = { tenantId: String(user._id || user.id), email: user.email, role: user.role };
-  return jwt.sign(payload as any, JWT_SECRET as any, { subject: String(user._id || user.id), expiresIn: ACCESS_EXP } as any);
+  const payload: any = {
+    tenantId: String(user._id || user.id),
+    email: user.email,
+    role: user.role,
+  };
+  return jwt.sign(
+    payload as any,
+    JWT_SECRET as any,
+    { subject: String(user._id || user.id), expiresIn: ACCESS_EXP } as any,
+  );
 }
 
 /**
@@ -70,7 +85,10 @@ export function generateRefreshToken() {
 
 export async function saveRefreshToken(userId: any, refreshToken: string) {
   const coll = usersColl();
-  await coll.updateOne({ _id: typeof userId === 'string' ? new (require('mongodb').ObjectId)(userId) : userId }, { $set: { refreshToken } });
+  await coll.updateOne(
+    { _id: typeof userId === 'string' ? new (require('mongodb').ObjectId)(userId) : userId },
+    { $set: { refreshToken } },
+  );
 }
 
 export async function verifyRefreshTokenForUser(userId: any, token: string) {
@@ -80,11 +98,17 @@ export async function verifyRefreshTokenForUser(userId: any, token: string) {
     return false;
   }
   const coll = usersColl();
-  const u = await coll.findOne({ _id: typeof userId === 'string' ? new (require('mongodb').ObjectId)(userId) : userId, refreshToken: token });
+  const u = await coll.findOne({
+    _id: typeof userId === 'string' ? new (require('mongodb').ObjectId)(userId) : userId,
+    refreshToken: token,
+  });
   return !!u;
 }
 
 export async function revokeRefreshToken(userId: any) {
   const coll = usersColl();
-  await coll.updateOne({ _id: typeof userId === 'string' ? new (require('mongodb').ObjectId)(userId) : userId }, { $unset: { refreshToken: '' } });
+  await coll.updateOne(
+    { _id: typeof userId === 'string' ? new (require('mongodb').ObjectId)(userId) : userId },
+    { $unset: { refreshToken: '' } },
+  );
 }

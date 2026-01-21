@@ -229,13 +229,26 @@ export default function NewCampaignPage() {
       </Box>
       {showResumePrompt && (
         <Box sx={{ maxWidth: 900, mx: 'auto', mb: 3 }}>
-          <Paper variant="outlined" sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 2,
+            }}
+          >
             <Box>
               <Typography sx={{ fontWeight: 600 }}>Found a saved draft</Typography>
-              <Typography variant="body2" color="text.secondary">Resume where you left off or start a fresh campaign.</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Resume where you left off or start a fresh campaign.
+              </Typography>
             </Box>
             <Box>
-              <Button onClick={startFresh} sx={{ mr: 1 }}>Start Fresh</Button>
+              <Button onClick={startFresh} sx={{ mr: 1 }}>
+                Start Fresh
+              </Button>
               <Button
                 onClick={resumeDraft}
                 sx={{
@@ -353,25 +366,41 @@ export default function NewCampaignPage() {
 
       {active === 3 && (
         <Box sx={{ maxWidth: 900, mx: 'auto' }}>
-          <Typography variant="h6" sx={{ mb: 1 }}>Review</Typography>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            Review
+          </Typography>
           <Paper variant="outlined" sx={{ p: 3, bgcolor: 'background.paper' }}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+            <Box
+              sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}
+            >
               <Box>
-                <Typography variant="subtitle2" color="text.secondary">Name</Typography>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Name
+                </Typography>
                 <Typography sx={{ fontWeight: 600 }}>{name || '(not provided)'}</Typography>
 
-                <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 2 }}>Audience</Typography>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 2 }}>
+                  Audience
+                </Typography>
                 <Typography sx={{ fontWeight: 600 }}>{audienceSize ?? '(not provided)'}</Typography>
 
-                <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 2 }}>Channel</Typography>
-                <Typography sx={{ fontWeight: 600 }}>{channel === 'email' ? 'Email' : channel}</Typography>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 2 }}>
+                  Channel
+                </Typography>
+                <Typography sx={{ fontWeight: 600 }}>
+                  {channel === 'email' ? 'Email' : channel}
+                </Typography>
               </Box>
 
               <Box>
-                <Typography variant="subtitle2" color="text.secondary">Subject</Typography>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Subject
+                </Typography>
                 <Typography sx={{ fontWeight: 600 }}>{subject || '(no subject)'}</Typography>
 
-                <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 2 }}>Body</Typography>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 2 }}>
+                  Body
+                </Typography>
                 <Paper variant="outlined" sx={{ p: 2, mt: 1, maxHeight: 220, overflow: 'auto' }}>
                   <Typography sx={{ whiteSpace: 'pre-wrap' }}>{body || '(no body)'}</Typography>
                 </Paper>
@@ -411,8 +440,8 @@ export default function NewCampaignPage() {
               boxShadow: '0 6px 18px rgba(138,35,135,0.18)',
               '&:hover': {
                 boxShadow: '0 8px 22px rgba(138,35,135,0.22)',
-                filter: 'brightness(0.98)'
-              }
+                filter: 'brightness(0.98)',
+              },
             }}
           >
             TRIGGER CAMPAIGN
@@ -427,14 +456,10 @@ export default function NewCampaignPage() {
         autoHideDuration={4000}
         onClose={handleSnackClose}
       >
-        <Alert
-          onClose={handleSnackClose}
-          severity="error"
-          sx={{ width: '100%' }}
-        >
-          {
-            (create.error as any)?.response?.data?.message || (create.error as any)?.message || 'Failed to create campaign'
-          }
+        <Alert onClose={handleSnackClose} severity="error" sx={{ width: '100%' }}>
+          {(create.error as any)?.response?.data?.message ||
+            (create.error as any)?.message ||
+            'Failed to create campaign'}
         </Alert>
       </Snackbar>
     </Box>

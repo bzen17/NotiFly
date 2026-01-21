@@ -29,7 +29,9 @@ async function publishPointer(redis: any, stream: string, fields: Record<string,
     const flat = Object.entries(fields).flat();
     return (redis as any).xadd(stream, '*', ...flat);
   }
-  throw new Error('Redis client does not support XADD; please use node-redis or provide an adapter');
+  throw new Error(
+    'Redis client does not support XADD; please use node-redis or provide an adapter',
+  );
 }
 
 /**

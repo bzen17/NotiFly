@@ -16,7 +16,10 @@ const DLQ_STREAM = STREAMS.DLQ;
  * stream is scanned and entries matching `campaignId` and/or `recipient`
  * are removed.
  */
-async function deleteDlqEntriesFor(redis: any, opts: { id?: string; campaignId?: string; recipient?: string }): Promise<void> {
+async function deleteDlqEntriesFor(
+  redis: any,
+  opts: { id?: string; campaignId?: string; recipient?: string },
+): Promise<void> {
   try {
     if (opts.id) {
       if (typeof redis.xDel === 'function') {
@@ -55,7 +58,10 @@ async function deleteDlqEntriesFor(redis: any, opts: { id?: string; campaignId?:
         } else if (typeof (redis as any).xdel === 'function') {
           await (redis as any).xdel(DLQ_STREAM, id);
         }
-        logger.info({ id, campaignId: cid, recipient: rec }, 'Deleted DLQ stream entry after requeue');
+        logger.info(
+          { id, campaignId: cid, recipient: rec },
+          'Deleted DLQ stream entry after requeue',
+        );
       } catch (e) {
         logger.warn({ err: e, id }, 'Failed to delete DLQ entry');
       }
@@ -124,11 +130,15 @@ export async function listDlq({ page = 1, limit = 50, filter = {} }: any): Promi
   if (campaignIds.length > 0) {
     try {
       const mongo = await getMongo();
-      const col = (mongo as any).db ? (mongo as any).db().collection('campaigns') : (mongo as any).collection('campaigns');
+      const col = (mongo as any).db
+        ? (mongo as any).db().collection('campaigns')
+        : (mongo as any).collection('campaigns');
       const q = { _id: { $in: campaignIds } } as any;
       // fetch name, tenant and createdAt fields
       const docs = await col
-        .find(q, { projection: { name: 1, tenantId: 1, tenant_id: 1, createdAt: 1, created_at: 1 } })
+        .find(q, {
+          projection: { name: 1, tenantId: 1, tenant_id: 1, createdAt: 1, created_at: 1 },
+        })
         .toArray();
       for (const d of docs) {
         campaignMeta[String(d._id)] = d;
@@ -188,13 +198,12 @@ export async function listDlq({ page = 1, limit = 50, filter = {} }: any): Promi
   const offset = (page - 1) * limit;
   const slice = filtered.slice(offset, offset + limit);
   const items = slice.map((p: any) => ({
-    tenantId:  p.payload?.tenantId || null,
+    tenantId: p.payload?.tenantId || null,
     deliveryId: p.id,
     campaignId: p.payload?.campaignId || null,
     channel: p.payload?.channel || 'email',
     recipient: p.payload?.recipient,
-    campaignName:
-      campaignMeta[String(p.payload?.campaignId || p.payload?.event_id)]?.name || null,
+    campaignName: campaignMeta[String(p.payload?.campaignId || p.payload?.event_id)]?.name || null,
     campaignCreatedAt: campaignMeta[String(p.payload?.campaignId)]?.createdAt || null,
     attempt: p.payload?.attempt != null ? Number(p.payload.attempt) : null,
     errorReason: p.payload?.error || (p.payload && p.payload.error) || p.msg?.error || null,
@@ -210,7 +219,10 @@ export async function listDlq({ page = 1, limit = 50, filter = {} }: any): Promi
  * is provided, enforces a requeue lock window and publishes an incoming
  * pointer for the worker to process.
  */
-export async function requeueDlq(deliveryId: string, requestingUser?: { id?: string; role?: string; tenantId?: string }): Promise<any> {
+export async function requeueDlq(
+  deliveryId: string,
+  requestingUser?: { id?: string; role?: string; tenantId?: string },
+): Promise<any> {
   const redis = getRedis();
   // fetch entry by id
   let entries: any[] = [];
@@ -247,7 +259,9 @@ export async function requeueDlq(deliveryId: string, requestingUser?: { id?: str
   if (requestingUser && requestingUser.role === 'tenant') {
     const mongo = await getMongo();
     try {
-      const col = (mongo as any).db ? (mongo as any).db().collection('campaigns') : (mongo as any).collection('campaigns');
+      const col = (mongo as any).db
+        ? (mongo as any).db().collection('campaigns')
+        : (mongo as any).collection('campaigns');
       const ev = await col.findOne({ _id: campaignId });
       const owner = ev?.tenantId || ev?.tenant_id || null;
       const reqTenant = requestingUser.tenantId || requestingUser.id;
@@ -369,7 +383,10 @@ export async function requeueDlq(deliveryId: string, requestingUser?: { id?: str
  * Verifies tenant access (when applicable), applies a short requeue lock
  * and publishes an incoming pointer for the worker.
  */
-export async function requeueDeliveryRow(deliveryRowId: string, requestingUser?: { id?: string; role?: string; tenantId?: string }): Promise<any> {
+export async function requeueDeliveryRow(
+  deliveryRowId: string,
+  requestingUser?: { id?: string; role?: string; tenantId?: string },
+): Promise<any> {
   const pg = getPgPool();
   // find delivery row
   const res = await pg.query(
@@ -445,13 +462,16 @@ export async function requeueDeliveryRow(deliveryRowId: string, requestingUser?:
     const redisCli = getRedis();
     await deleteDlqEntriesFor(redisCli, { campaignId, recipient });
   } catch (e) {
-    logger.warn({ err: e, campaignId, recipient }, 'failed to clean up dlq entries after requeueDeliveryRow');
+    logger.warn(
+      { err: e, campaignId, recipient },
+      'failed to clean up dlq entries after requeueDeliveryRow',
+    );
   }
   try {
-      await pg.query(
-        `UPDATE deliveries SET status = '${STATUS.REQUEUED}', updated_at = clock_timestamp()::timestamptz(6) WHERE id = $1 AND status != '${STATUS.REQUEUED}'`,
-        [deliveryRowId],
-      );
+    await pg.query(
+      `UPDATE deliveries SET status = '${STATUS.REQUEUED}', updated_at = clock_timestamp()::timestamptz(6) WHERE id = $1 AND status != '${STATUS.REQUEUED}'`,
+      [deliveryRowId],
+    );
   } catch (err) {
     logger.warn({ err }, 'failed to update delivery status on requeue');
   }
@@ -463,7 +483,10 @@ export async function requeueDeliveryRow(deliveryRowId: string, requestingUser?:
  * Returns an object with `requeued` count, per-row `locks` and a
  * campaign-level `lockedUntil` ISO timestamp for the UI to respect.
  */
-export async function requeueCampaign(campaignId: string, requestingUser?: { id?: string; role?: string; tenantId?: string }): Promise<any> {
+export async function requeueCampaign(
+  campaignId: string,
+  requestingUser?: { id?: string; role?: string; tenantId?: string },
+): Promise<any> {
   const pg = getPgPool();
   // select failed deliveries for campaign
   const res = await pg.query(
@@ -488,7 +511,7 @@ export async function requeueCampaign(campaignId: string, requestingUser?: { id?
   }
 
   // Tenant authorization: ensure requestingUser owns this campaign
-    if (requestingUser && requestingUser.role === 'tenant') {
+  if (requestingUser && requestingUser.role === 'tenant') {
     const owner = ev?.tenantId || ev?.tenant_id || null;
     const reqTenant = requestingUser.tenantId || requestingUser.id;
     if (!owner || String(owner) !== String(reqTenant)) {
@@ -499,9 +522,9 @@ export async function requeueCampaign(campaignId: string, requestingUser?: { id?
   }
 
   const stream = channel ? `notifications.${channel}` : STREAMS.INCOMING;
-    const REQUEUE_LOCK_MS = Number(process.env.REQUEUE_LOCK_MS || 10 * 60 * 1000);
-    const locks: Record<string, string> = {};
-    const campaignLockedUntilIso = new Date(Date.now() + REQUEUE_LOCK_MS).toISOString();
+  const REQUEUE_LOCK_MS = Number(process.env.REQUEUE_LOCK_MS || 10 * 60 * 1000);
+  const locks: Record<string, string> = {};
+  const campaignLockedUntilIso = new Date(Date.now() + REQUEUE_LOCK_MS).toISOString();
 
   for (const row of res.rows) {
     try {
@@ -527,7 +550,10 @@ export async function requeueCampaign(campaignId: string, requestingUser?: { id?
         const redisCli = getRedis();
         await deleteDlqEntriesFor(redisCli, { campaignId, recipient });
       } catch (e) {
-        logger.warn({ err: e, campaignId, recipient }, 'failed to clean up dlq entries after requeueCampaign');
+        logger.warn(
+          { err: e, campaignId, recipient },
+          'failed to clean up dlq entries after requeueCampaign',
+        );
       }
       await pg.query(
         `UPDATE deliveries SET status = '${STATUS.REQUEUED}', updated_at = clock_timestamp()::timestamptz(6) WHERE id = $1 AND status = '${STATUS.FAILED}'`,
@@ -535,7 +561,7 @@ export async function requeueCampaign(campaignId: string, requestingUser?: { id?
       );
       // mark lock for this row
       try {
-          const lockedUntilIso = campaignLockedUntilIso;
+        const lockedUntilIso = campaignLockedUntilIso;
         locks[String(row.id)] = lockedUntilIso;
       } catch (e) {
         // ignore
@@ -546,7 +572,7 @@ export async function requeueCampaign(campaignId: string, requestingUser?: { id?
     }
   }
 
-    return { requeued, locks, lockedUntil: campaignLockedUntilIso };
+  return { requeued, locks, lockedUntil: campaignLockedUntilIso };
 }
 
 export default { listDlq, requeueDlq, requeueDeliveryRow, requeueCampaign, deleteDlqEntriesFor };

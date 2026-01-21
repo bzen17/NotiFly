@@ -41,11 +41,24 @@ export async function getDashboardMetrics(user: any, range: string = '24h') {
       const tenantWhereSql = tenantClause; // either 'WHERE tenant_id = $1' or ''
       const tenantParamsLocal = tenantParams;
 
-      const totalRes = await pg.query(`SELECT COUNT(*)::int AS total FROM deliveries ${tenantWhereSql}`, tenantParamsLocal);
-      const successWhere = tenantWhereSql ? `${tenantWhereSql} AND status = '${STATUS.DELIVERED}'` : `WHERE status = '${STATUS.DELIVERED}'`;
-      const failedWhere = tenantWhereSql ? `${tenantWhereSql} AND status = '${STATUS.FAILED}'` : `WHERE status = '${STATUS.FAILED}'`;
-      const successRes = await pg.query(`SELECT COUNT(*)::int AS success FROM deliveries ${successWhere}`, tenantParamsLocal);
-      const failedRes = await pg.query(`SELECT COUNT(*)::int AS failed FROM deliveries ${failedWhere}`, tenantParamsLocal);
+      const totalRes = await pg.query(
+        `SELECT COUNT(*)::int AS total FROM deliveries ${tenantWhereSql}`,
+        tenantParamsLocal,
+      );
+      const successWhere = tenantWhereSql
+        ? `${tenantWhereSql} AND status = '${STATUS.DELIVERED}'`
+        : `WHERE status = '${STATUS.DELIVERED}'`;
+      const failedWhere = tenantWhereSql
+        ? `${tenantWhereSql} AND status = '${STATUS.FAILED}'`
+        : `WHERE status = '${STATUS.FAILED}'`;
+      const successRes = await pg.query(
+        `SELECT COUNT(*)::int AS success FROM deliveries ${successWhere}`,
+        tenantParamsLocal,
+      );
+      const failedRes = await pg.query(
+        `SELECT COUNT(*)::int AS failed FROM deliveries ${failedWhere}`,
+        tenantParamsLocal,
+      );
 
       // determine interval based on requested range
       let intervalSql = "'24 hours'";
@@ -59,14 +72,18 @@ export async function getDashboardMetrics(user: any, range: string = '24h') {
         whereParts.push(`tenant_id = $1`);
         params.push(user.tenantId);
       }
-      whereParts.push(`created_at >= (clock_timestamp()::timestamptz(6) - interval ${intervalSql})`);
+      whereParts.push(
+        `created_at >= (clock_timestamp()::timestamptz(6) - interval ${intervalSql})`,
+      );
       const whereSql = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : '';
 
       const periodRes = await pg.query(
         `SELECT COUNT(*)::int AS periodCount FROM deliveries ${whereSql}`,
         params,
       );
-      const todayWhere = tenantWhereSql ? `${tenantWhereSql} AND created_at >= date_trunc('day', clock_timestamp()::timestamptz(6))` : `WHERE created_at >= date_trunc('day', clock_timestamp()::timestamptz(6))`;
+      const todayWhere = tenantWhereSql
+        ? `${tenantWhereSql} AND created_at >= date_trunc('day', clock_timestamp()::timestamptz(6))`
+        : `WHERE created_at >= date_trunc('day', clock_timestamp()::timestamptz(6))`;
       const todayRes = await pg.query(
         `SELECT COUNT(*)::int AS today FROM deliveries ${todayWhere}`,
         tenantParamsLocal,
@@ -86,22 +103,46 @@ export async function getDashboardMetrics(user: any, range: string = '24h') {
         const perRows = perRowsRes.rows || [];
 
         // collect campaign ids and fetch campaign createdAt from Mongo
-        const campaignIds = Array.from(new Set(perRows.map((r: any) => r.campaign_id).filter(Boolean)));
+        const campaignIds = Array.from(
+          new Set(perRows.map((r: any) => r.campaign_id).filter(Boolean)),
+        );
         const campaignMeta: Record<string, any> = {};
         if (campaignIds.length > 0 && mongo) {
           try {
-            const col = mongo.db ? mongo.db().collection('campaigns') : mongo.collection('campaigns');
-            const docs = await col.find({ _id: { $in: campaignIds } }, { projection: { createdAt: 1, created_at: 1 } }).toArray();
+            const col = mongo.db
+              ? mongo.db().collection('campaigns')
+              : mongo.collection('campaigns');
+            const docs = await col
+              .find({ _id: { $in: campaignIds } }, { projection: { createdAt: 1, created_at: 1 } })
+              .toArray();
             for (const d of docs) campaignMeta[String(d._id)] = d;
           } catch (err) {
             // ignore campaign meta load errors
           }
         }
 
-        const channelMap: Record<string, { sent: number; success: number; failed: number; totalLatencyMs: number; latencyCount: number; retries: number }> = {};
+        const channelMap: Record<
+          string,
+          {
+            sent: number;
+            success: number;
+            failed: number;
+            totalLatencyMs: number;
+            latencyCount: number;
+            retries: number;
+          }
+        > = {};
         for (const r of perRows) {
           const ch = r.channel || 'unknown';
-          if (!channelMap[ch]) channelMap[ch] = { sent: 0, success: 0, failed: 0, totalLatencyMs: 0, latencyCount: 0, retries: 0 };
+          if (!channelMap[ch])
+            channelMap[ch] = {
+              sent: 0,
+              success: 0,
+              failed: 0,
+              totalLatencyMs: 0,
+              latencyCount: 0,
+              retries: 0,
+            };
           channelMap[ch].sent += 1;
           if (r.status === STATUS.DELIVERED) channelMap[ch].success += 1;
           else channelMap[ch].failed += 1;
@@ -147,7 +188,8 @@ export async function getDashboardMetrics(user: any, range: string = '24h') {
         const tsRes = await pg.query(tsSql, params);
         // assemble buckets and series
         const buckets: string[] = [];
-        const channelsMap: Record<string, { sent: number[]; success: number[]; failed: number[] }> = {};
+        const channelsMap: Record<string, { sent: number[]; success: number[]; failed: number[] }> =
+          {};
         const rows = tsRes.rows || [];
         // collect unique bucket timestamps in order
         const bucketSet: string[] = [];
@@ -159,7 +201,12 @@ export async function getDashboardMetrics(user: any, range: string = '24h') {
         // initialize channel arrays
         rows.forEach((r: any) => {
           const ch = r.channel || 'unknown';
-          if (!channelsMap[ch]) channelsMap[ch] = { sent: Array(buckets.length).fill(0), success: Array(buckets.length).fill(0), failed: Array(buckets.length).fill(0) };
+          if (!channelsMap[ch])
+            channelsMap[ch] = {
+              sent: Array(buckets.length).fill(0),
+              success: Array(buckets.length).fill(0),
+              failed: Array(buckets.length).fill(0),
+            };
           const idx = buckets.indexOf(new Date(r.bucket).toISOString());
           if (idx >= 0) {
             channelsMap[ch].sent[idx] = Number(r.sent || 0);
@@ -188,11 +235,12 @@ export async function getDashboardMetrics(user: any, range: string = '24h') {
   // DLQ count (Redis stream length) - admin only, but we return 0 for tenants
   let dlqCount = 0;
   try {
-      if (redis && user && user.role === 'admin') {
+    if (redis && user && user.role === 'admin') {
       if (typeof redis.xLen === 'function') dlqCount = await redis.xLen(STREAMS.DLQ);
       else if (typeof redis.xlen === 'function') dlqCount = await redis.xlen(STREAMS.DLQ);
       else {
-        const items = typeof redis.xRange === 'function' ? await redis.xRange(STREAMS.DLQ, '-', '+') : [];
+        const items =
+          typeof redis.xRange === 'function' ? await redis.xRange(STREAMS.DLQ, '-', '+') : [];
         dlqCount = Array.isArray(items) ? items.length : 0;
       }
     }

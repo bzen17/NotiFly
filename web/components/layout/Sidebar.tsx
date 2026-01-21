@@ -34,13 +34,13 @@ export default function Sidebar({ collapsed = false }: { collapsed?: boolean }) 
       sx={{
         width,
         flexShrink: 0,
-          [`& .MuiDrawer-paper`]: (theme: any) => ({
-            width,
-            boxSizing: 'border-box',
-            overflowX: 'hidden',
-            top: 64,
-            zIndex: (theme?.zIndex?.appBar ?? 1100) - 1,
-          }),
+        [`& .MuiDrawer-paper`]: (theme: any) => ({
+          width,
+          boxSizing: 'border-box',
+          overflowX: 'hidden',
+          top: 64,
+          zIndex: (theme?.zIndex?.appBar ?? 1100) - 1,
+        }),
       }}
     >
       <Divider />

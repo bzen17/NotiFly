@@ -104,9 +104,10 @@ export default function DlqPage() {
   }, []);
 
   const [confirmOpen, setConfirmOpen] = React.useState(false);
-  const [selected, setSelected] = React.useState<{ type: 'delivery' | 'campaign'; id: string } | null>(
-    null,
-  );
+  const [selected, setSelected] = React.useState<{
+    type: 'delivery' | 'campaign';
+    id: string;
+  } | null>(null);
   const [openMap, setOpenMap] = React.useState<Record<string, boolean>>({});
   const [clientNow, setClientNow] = React.useState<number | null>(null);
 
@@ -119,7 +120,7 @@ export default function DlqPage() {
   if (isLoading) return <Loading />;
   if (isError) return <ErrorAlert message="Failed to load DLQ" />;
 
-  const dlqList = Array.isArray(data) ? data : data?.items ?? [];
+  const dlqList = Array.isArray(data) ? data : (data?.items ?? []);
 
   // group by campaignId
   const groups: Record<string, any[]> = {};
@@ -132,7 +133,8 @@ export default function DlqPage() {
   const campaignGroups = Object.keys(groups).map((k) => {
     const items = groups[k];
     const first = items[0] || {};
-    const label = first.campaign?.name || first.campaignName || first.email || first.recipient || first.to || k;
+    const label =
+      first.campaign?.name || first.campaignName || first.email || first.recipient || first.to || k;
     return { campaignId: k, label, items };
   });
 
@@ -166,7 +168,12 @@ export default function DlqPage() {
                 <React.Fragment key={g.campaignId}>
                   <TableRow>
                     <TableCell>
-                      <IconButton size="small" onClick={() => setOpenMap((m) => ({ ...m, [g.campaignId]: !m[g.campaignId] }))}>
+                      <IconButton
+                        size="small"
+                        onClick={() =>
+                          setOpenMap((m) => ({ ...m, [g.campaignId]: !m[g.campaignId] }))
+                        }
+                      >
                         {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
                       </IconButton>
                     </TableCell>
@@ -209,16 +216,30 @@ export default function DlqPage() {
                             <TableBody>
                               {g.items.map((r: any) => {
                                 const rowId = r.id ?? r._id ?? r.deliveryId;
-                                const lockedTs = requeueLocks[rowId] || (r.requeueLockedUntil ? new Date(r.requeueLockedUntil).getTime() : 0);
-                                const isLocked = clientNow ? !!(lockedTs && lockedTs > clientNow) : false;
+                                const lockedTs =
+                                  requeueLocks[rowId] ||
+                                  (r.requeueLockedUntil
+                                    ? new Date(r.requeueLockedUntil).getTime()
+                                    : 0);
+                                const isLocked = clientNow
+                                  ? !!(lockedTs && lockedTs > clientNow)
+                                  : false;
                                 return (
                                   <TableRow key={rowId}>
                                     <TableCell>{rowId}</TableCell>
                                     <TableCell>{r.channel}</TableCell>
                                     <TableCell>{r.errorReason}</TableCell>
-                                    <TableCell>{r.failedAt ? new Date(r.failedAt).toISOString() : ''}</TableCell>
+                                    <TableCell>
+                                      {r.failedAt ? new Date(r.failedAt).toISOString() : ''}
+                                    </TableCell>
                                     <TableCell align="right">
-                                      <Tooltip title={isLocked ? 'Requeued — try again later' : 'Requeue delivery'}>
+                                      <Tooltip
+                                        title={
+                                          isLocked
+                                            ? 'Requeued — try again later'
+                                            : 'Requeue delivery'
+                                        }
+                                      >
                                         <span>
                                           <Button
                                             variant="outlined"

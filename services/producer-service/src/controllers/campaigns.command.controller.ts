@@ -9,7 +9,10 @@ import { ERRORS } from '../constants';
  */
 
 export async function createCampaignController(req: Request, res: Response) {
-  logger.info({ user: (req as any).user?.id || null, bodyKeys: Object.keys(req.body || {}) }, 'createCampaignController');
+  logger.info(
+    { user: (req as any).user?.id || null, bodyKeys: Object.keys(req.body || {}) },
+    'createCampaignController',
+  );
   try {
     const result = await createCampaign(req.body);
     return res.status(202).json({ campaignId: result.campaignId });

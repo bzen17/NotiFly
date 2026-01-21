@@ -32,36 +32,52 @@ export async function requeueDlqController(req: Request, res: Response) {
     const { deliveryId } = req.params;
     const user = (req as any).user;
     const result = await requeueDlq(deliveryId, user);
-    return res.status(202).json({ status: 'accepted', requeueLockedUntil: result?.requeueLockedUntil });
+    return res
+      .status(202)
+      .json({ status: 'accepted', requeueLockedUntil: result?.requeueLockedUntil });
   } catch (err: any) {
     const requestId = (req as any).requestId || null;
     logger.error({ err, requestId }, 'requeueDlqController error');
     if (err && err.code === ERRORS.LOCKED)
-      return res.status(409).json({ error: ERRORS.LOCKED, requeueLockedUntil: err.requeueLockedUntil });
-    if (err && err.message === ERRORS.NOT_FOUND) return res.status(404).json({ error: ERRORS.NOT_FOUND });
+      return res
+        .status(409)
+        .json({ error: ERRORS.LOCKED, requeueLockedUntil: err.requeueLockedUntil });
+    if (err && err.message === ERRORS.NOT_FOUND)
+      return res.status(404).json({ error: ERRORS.NOT_FOUND });
     return res.status(500).json({ error: ERRORS.INTERNAL_ERROR });
   }
 }
 
 export async function requeueDeliveryRowController(req: Request, res: Response) {
-  logger.info({ user: (req as any).user?.id || null, params: req.params }, 'requeueDeliveryRowController');
+  logger.info(
+    { user: (req as any).user?.id || null, params: req.params },
+    'requeueDeliveryRowController',
+  );
   try {
     const { deliveryId } = req.params;
     const user = (req as any).user;
     const result = await requeueDeliveryRow(deliveryId, user);
-    return res.status(202).json({ status: 'accepted', requeueLockedUntil: result?.requeueLockedUntil });
+    return res
+      .status(202)
+      .json({ status: 'accepted', requeueLockedUntil: result?.requeueLockedUntil });
   } catch (err: any) {
     const requestId = (req as any).requestId || null;
     logger.error({ err, requestId }, 'requeueDeliveryRowController error');
     if (err && err.code === ERRORS.LOCKED)
-      return res.status(409).json({ error: ERRORS.LOCKED, requeueLockedUntil: err.requeueLockedUntil });
-    if (err && err.message === ERRORS.NOT_FOUND) return res.status(404).json({ error: ERRORS.NOT_FOUND });
+      return res
+        .status(409)
+        .json({ error: ERRORS.LOCKED, requeueLockedUntil: err.requeueLockedUntil });
+    if (err && err.message === ERRORS.NOT_FOUND)
+      return res.status(404).json({ error: ERRORS.NOT_FOUND });
     return res.status(500).json({ error: ERRORS.INTERNAL_ERROR });
   }
 }
 
 export async function requeueCampaignController(req: Request, res: Response) {
-  logger.info({ user: (req as any).user?.id || null, params: req.params }, 'requeueCampaignController');
+  logger.info(
+    { user: (req as any).user?.id || null, params: req.params },
+    'requeueCampaignController',
+  );
   try {
     const { campaignId } = req.params;
     const user = (req as any).user;

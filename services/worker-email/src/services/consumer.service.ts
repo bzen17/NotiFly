@@ -103,7 +103,7 @@ export async function processMessage(redis: any, mongo: any, pg: any, msg: any) 
       providerResponse: (resp as any).rawResponse,
       error: resp.success ? undefined : (resp as any).errorCode || STATUS.FAILED,
     };
-    
+
     // Write delivery row to Postgres. Use upsert so retries update existing row
     try {
       await pg.query(
@@ -149,11 +149,11 @@ export async function processMessage(redis: any, mongo: any, pg: any, msg: any) 
       }
     } else {
       // Update campaign status on success
-        try {
-          await markDeliveryStatus(mongo, campaignId, STATUS.DELIVERED);
-        } catch (err) {
-          log.warn({ err }, 'Could not update campaign status in Mongo');
-        }
+      try {
+        await markDeliveryStatus(mongo, campaignId, STATUS.DELIVERED);
+      } catch (err) {
+        log.warn({ err }, 'Could not update campaign status in Mongo');
+      }
       log.info({ campaignId, recipient }, 'Delivery succeeded');
     }
   } catch (err: any) {

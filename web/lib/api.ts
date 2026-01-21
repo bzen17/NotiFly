@@ -35,7 +35,8 @@ api.interceptors.response.use(
     if (status !== 401) return Promise.reject(err);
 
     // attempt refresh
-    const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+    const refreshToken =
+      typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
     if (!refreshToken) return Promise.reject(err);
 
     if (!refreshPromise) {
@@ -74,7 +75,7 @@ api.interceptors.response.use(
     } catch (e) {
       return Promise.reject(err);
     }
-  }
+  },
 );
 
 export default api;

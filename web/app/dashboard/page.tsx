@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import React from 'react';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
@@ -78,63 +78,148 @@ export default function DashboardPage() {
       <Grid container spacing={2} sx={{ mb: 1 }}>
         {/** Metric cards row - compact and consistent */}
         {(() => {
-                const email = (perChannel || []).find((p: any) => (p.channel || '').toLowerCase() === 'email') || null;
-                return (
-        <>
-        {[
-          { title: `Total Notifications (${totalNotifications?.range ?? range})`, value: totalNotifications?.period ?? 0, caption: `Today: ${totalNotifications?.today ?? 0}` },
-          { title: 'Delivery Success Rate', value: `${deliverySuccessRate ?? 0}%`, caption: `${successCount ?? 0} success • ${failedCount ?? 0} failed` },
-          { title: 'Failed Deliveries', value: failedCount ?? 0, caption: '' },
-          { title: 'Total Deliveries', value: totalDeliveries ?? 0, caption: '' },
-          { title: 'Active Tenants', value: activeTenants ?? 0, caption: '' },
-          { title: 'Avg latency', value: email && email.avgLatencyMs ? Math.round(email.avgLatencyMs) + 'ms' : '—', caption: '' },
-          { title: 'Retries', value: email ? email.retries : 0, caption: '' },
-        ].map((m, idx) => (
-          <Grid key={m.title} item xs={12} sm={6} md={2.4}>
-            <Card sx={{ height: 120, width: 180, display: 'flex', alignItems: 'center', boxShadow: CARD_SHADOW, borderRadius: 2 }}>
-              <Box sx={{ width: 6, height: '100%', bgcolor: ACCENT_BG, borderTopLeftRadius: 8, borderBottomLeftRadius: 8 }} />
-              <CardContent sx={{ py: 1, pl: 2, pr: 1 }}>
-                <Typography variant="caption" color="text.secondary">{m.title}</Typography>
-                <Typography variant="h6" sx={{ mt: 0.5 }}>{m.value}</Typography>
-                {m.caption ? <Typography variant="caption" color="text.secondary">{m.caption}</Typography> : null}
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-        </>
-        );
-              })()}
+          const email =
+            (perChannel || []).find((p: any) => (p.channel || '').toLowerCase() === 'email') ||
+            null;
+          return (
+            <>
+              {[
+                {
+                  title: `Total Notifications (${totalNotifications?.range ?? range})`,
+                  value: totalNotifications?.period ?? 0,
+                  caption: `Today: ${totalNotifications?.today ?? 0}`,
+                },
+                {
+                  title: 'Delivery Success Rate',
+                  value: `${deliverySuccessRate ?? 0}%`,
+                  caption: `${successCount ?? 0} success • ${failedCount ?? 0} failed`,
+                },
+                { title: 'Failed Deliveries', value: failedCount ?? 0, caption: '' },
+                { title: 'Total Deliveries', value: totalDeliveries ?? 0, caption: '' },
+                { title: 'Active Tenants', value: activeTenants ?? 0, caption: '' },
+                {
+                  title: 'Avg latency',
+                  value: email && email.avgLatencyMs ? Math.round(email.avgLatencyMs) + 'ms' : '—',
+                  caption: '',
+                },
+                { title: 'Retries', value: email ? email.retries : 0, caption: '' },
+              ].map((m, idx) => (
+                <Grid key={m.title} item xs={12} sm={6} md={2.4}>
+                  <Card
+                    sx={{
+                      height: 120,
+                      width: 180,
+                      display: 'flex',
+                      alignItems: 'center',
+                      boxShadow: CARD_SHADOW,
+                      borderRadius: 2,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 6,
+                        height: '100%',
+                        bgcolor: ACCENT_BG,
+                        borderTopLeftRadius: 8,
+                        borderBottomLeftRadius: 8,
+                      }}
+                    />
+                    <CardContent sx={{ py: 1, pl: 2, pr: 1 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        {m.title}
+                      </Typography>
+                      <Typography variant="h6" sx={{ mt: 0.5 }}>
+                        {m.value}
+                      </Typography>
+                      {m.caption ? (
+                        <Typography variant="caption" color="text.secondary">
+                          {m.caption}
+                        </Typography>
+                      ) : null}
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </>
+          );
+        })()}
         {role === 'admin' && (
           <Grid item xs={12} sm={6} md={2.4}>
-            <Card sx={{ height: 120, width: 180, display: 'flex', alignItems: 'center', boxShadow: CARD_SHADOW, borderRadius: 2 }}>
-              <Box sx={{ width: 6, height: '100%', bgcolor: ACCENT_BG, borderTopLeftRadius: 8, borderBottomLeftRadius: 8 }} />
+            <Card
+              sx={{
+                height: 120,
+                width: 180,
+                display: 'flex',
+                alignItems: 'center',
+                boxShadow: CARD_SHADOW,
+                borderRadius: 2,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 6,
+                  height: '100%',
+                  bgcolor: ACCENT_BG,
+                  borderTopLeftRadius: 8,
+                  borderBottomLeftRadius: 8,
+                }}
+              />
               <CardContent sx={{ py: 1, pl: 2 }}>
-                <Typography variant="caption" color="text.secondary">DLQ Entries (Admin)</Typography>
-                <Typography variant="h6" sx={{ mt: 0.5 }}>{dlqCount ?? 0}</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  DLQ Entries (Admin)
+                </Typography>
+                <Typography variant="h6" sx={{ mt: 0.5 }}>
+                  {dlqCount ?? 0}
+                </Typography>
               </CardContent>
             </Card>
           </Grid>
         )}
       </Grid>
 
-      <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', md: 'row' }, alignItems: 'stretch', my: 4 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 2,
+          flexDirection: { xs: 'column', md: 'row' },
+          alignItems: 'stretch',
+          my: 4,
+        }}
+      >
         <Box sx={{ flex: 1 }}>
           <Card sx={{ boxShadow: CARD_SHADOW, borderRadius: 2, height: '100%' }}>
             <CardContent sx={{ height: 420, px: 0 }}>
-              <Typography variant="caption" color="text.secondary" gutterBottom sx={{px: 4}}>Sent per Channel (stacked)</Typography>
+              <Typography variant="caption" color="text.secondary" gutterBottom sx={{ px: 4 }}>
+                Sent per Channel (stacked)
+              </Typography>
               <Box sx={{ height: 12 }} />
               {(() => {
-                const buckets = (timeSeries?.buckets || []);
+                const buckets = timeSeries?.buckets || [];
                 const channelsMap = timeSeries?.channels || {};
-                const emailSeries = channelsMap['email'] || channelsMap['Email'] || channelsMap['EMAIL'] || null;
+                const emailSeries =
+                  channelsMap['email'] || channelsMap['Email'] || channelsMap['EMAIL'] || null;
                 if (!emailSeries || !buckets.length) {
                   return (
-                    <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2 }}>
-                      <Typography variant="body2" color="text.secondary">No data for selected range</Typography>
+                    <Box
+                      sx={{
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        p: 2,
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        No data for selected range
+                      </Typography>
                     </Box>
                   );
                 }
-                const data = buckets.map((b: string, i: number) => ({ name: new Date(b).toLocaleString(), success: emailSeries.success?.[i] || 0, failed: emailSeries.failed?.[i] || 0 }));
+                const data = buckets.map((b: string, i: number) => ({
+                  name: new Date(b).toLocaleString(),
+                  success: emailSeries.success?.[i] || 0,
+                  failed: emailSeries.failed?.[i] || 0,
+                }));
                 return (
                   <Box sx={{ height: 'calc(100% - 1rem)', px: 2 }}>
                     <ResponsiveContainer width="100%" height="100%">
@@ -157,35 +242,58 @@ export default function DashboardPage() {
         <Box sx={{ flex: 1 }}>
           <Card sx={{ boxShadow: CARD_SHADOW, borderRadius: 2, height: '100%' }}>
             <CardContent sx={{ height: 420, px: 0 }}>
-              <Typography variant="caption" color="text.secondary" gutterBottom sx={{px: 4}}>Total Deliveries Over Time</Typography>
+              <Typography variant="caption" color="text.secondary" gutterBottom sx={{ px: 4 }}>
+                Total Deliveries Over Time
+              </Typography>
               <Box sx={{ height: 12 }} />
               {(() => {
-                const buckets = (timeSeries?.buckets || []);
+                const buckets = timeSeries?.buckets || [];
                 if (!buckets.length) {
                   return (
-                    <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2 }}>
-                      <Typography variant="body2" color="text.secondary">No data for selected range</Typography>
+                    <Box
+                      sx={{
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        p: 2,
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        No data for selected range
+                      </Typography>
                     </Box>
                   );
                 }
                 return (
                   <Box sx={{ height: 'calc(100% - 1rem)', px: 2 }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={(() => {
-                        const buckets = (timeSeries?.buckets || []);
-                        const channelsMap = timeSeries?.channels || {};
-                        const channels = Object.keys(channelsMap || {});
-                        return buckets.map((b: string, i: number) => {
-                          const obj: any = { name: new Date(b).toLocaleString(), total: 0 };
-                          channels.forEach((ch) => { obj.total += (channelsMap[ch].sent?.[i]) || 0; });
-                          return obj;
-                        });
-                      })()} margin={{ top: 8, right: 8, bottom: 8, left: 0 }}>
+                      <LineChart
+                        data={(() => {
+                          const buckets = timeSeries?.buckets || [];
+                          const channelsMap = timeSeries?.channels || {};
+                          const channels = Object.keys(channelsMap || {});
+                          return buckets.map((b: string, i: number) => {
+                            const obj: any = { name: new Date(b).toLocaleString(), total: 0 };
+                            channels.forEach((ch) => {
+                              obj.total += channelsMap[ch].sent?.[i] || 0;
+                            });
+                            return obj;
+                          });
+                        })()}
+                        margin={{ top: 8, right: 8, bottom: 8, left: 0 }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                         <YAxis />
                         <Tooltip />
-                        <Line type="monotone" dataKey="total" stroke="#1976d2" strokeWidth={2} dot={false} />
+                        <Line
+                          type="monotone"
+                          dataKey="total"
+                          stroke="#1976d2"
+                          strokeWidth={2}
+                          dot={false}
+                        />
                       </LineChart>
                     </ResponsiveContainer>
                   </Box>

@@ -13,7 +13,8 @@ import { ERRORS, ROLES } from '../constants';
 
 export async function signupController(req: Request, res: Response) {
   const { email, password, name, tenantId } = req.body;
-  if (!email || !password || !name) return res.status(400).json({ error: ERRORS.EMAIL_PASSWORD_NAME_REQUIRED });
+  if (!email || !password || !name)
+    return res.status(400).json({ error: ERRORS.EMAIL_PASSWORD_NAME_REQUIRED });
   const coll = (require('mongodb').MongoClient as any).prototype; // placeholder
   const mongo = require('../config/db').getMongo();
   const db = mongo.db ? mongo.db() : mongo;
@@ -33,7 +34,8 @@ export async function signupController(req: Request, res: Response) {
 
 export async function loginController(req: Request, res: Response) {
   const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: ERRORS.EMAIL_AND_PASSWORD_REQUIRED });
+  if (!email || !password)
+    return res.status(400).json({ error: ERRORS.EMAIL_AND_PASSWORD_REQUIRED });
   const user = await findUserByEmail(email);
   if (!user) return res.status(401).json({ error: ERRORS.INVALID_CREDENTIALS });
   const ok = await verifyUserPassword(user, password);
@@ -41,7 +43,17 @@ export async function loginController(req: Request, res: Response) {
   const access = generateAccessToken(user);
   const refresh = generateRefreshToken();
   await saveRefreshToken(user._id, refresh);
-  return res.json({ accessToken: access, refreshToken: refresh, user: { id: String(user._id), email: user.email, role: user.role, tenantId: user.tenantId, name: user.name } });
+  return res.json({
+    accessToken: access,
+    refreshToken: refresh,
+    user: {
+      id: String(user._id),
+      email: user.email,
+      role: user.role,
+      tenantId: user.tenantId,
+      name: user.name,
+    },
+  });
 }
 
 export async function refreshController(req: Request, res: Response) {
@@ -71,9 +83,11 @@ export async function logoutController(req: Request, res: Response) {
 export async function createUserController(req: Request, res: Response) {
   // Admin-only: create a new user and allow setting role
   const actor = (req as any).user;
-  if (!actor || actor.role !== ROLES.ADMIN) return res.status(403).json({ error: ERRORS.FORBIDDEN });
+  if (!actor || actor.role !== ROLES.ADMIN)
+    return res.status(403).json({ error: ERRORS.FORBIDDEN });
   const { email, password, name, role = 'tenant', tenantId } = req.body;
-  if (!email || !password || !name) return res.status(400).json({ error: ERRORS.EMAIL_PASSWORD_NAME_REQUIRED });
+  if (!email || !password || !name)
+    return res.status(400).json({ error: ERRORS.EMAIL_PASSWORD_NAME_REQUIRED });
   const mongo = require('../config/db').getMongo();
   const db = mongo.db ? mongo.db() : mongo;
   const exists = await db.collection('users').findOne({ email });

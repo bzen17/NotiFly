@@ -19,9 +19,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          {isAuthRoute ? children : <AppShell>{children}</AppShell>}
-        </AuthProvider>
+        <AuthProvider>{isAuthRoute ? children : <AppShell>{children}</AppShell>}</AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

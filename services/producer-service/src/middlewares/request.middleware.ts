@@ -27,7 +27,14 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
 
   try {
     logger.info(
-      { requestId, method: req.method, path: req.path, query: req.query, body: safeBody(req.body), user: (req as any).user?.id || null },
+      {
+        requestId,
+        method: req.method,
+        path: req.path,
+        query: req.query,
+        body: safeBody(req.body),
+        user: (req as any).user?.id || null,
+      },
       'Incoming request',
     );
   } catch (e) {
@@ -43,7 +50,16 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
   res.json = (body: any) => {
     responsePayload = body;
     try {
-      logger.info({ requestId, method: req.method, path: req.path, status: res.statusCode, response: safeBody(body) }, 'Sending JSON response');
+      logger.info(
+        {
+          requestId,
+          method: req.method,
+          path: req.path,
+          status: res.statusCode,
+          response: safeBody(body),
+        },
+        'Sending JSON response',
+      );
     } catch (e) {
       // ignore
     }
@@ -53,7 +69,16 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
   res.send = (body?: any) => {
     if (body && typeof body !== 'string') responsePayload = body;
     try {
-      logger.info({ requestId, method: req.method, path: req.path, status: res.statusCode, response: typeof body === 'string' ? '[string]' : safeBody(body) }, 'Sending response');
+      logger.info(
+        {
+          requestId,
+          method: req.method,
+          path: req.path,
+          status: res.statusCode,
+          response: typeof body === 'string' ? '[string]' : safeBody(body),
+        },
+        'Sending response',
+      );
     } catch (e) {
       // ignore
     }
@@ -63,7 +88,10 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
   res.on('finish', () => {
     const duration = Date.now() - start;
     try {
-      logger.info({ requestId, method: req.method, path: req.path, status: res.statusCode, duration }, 'Request handled');
+      logger.info(
+        { requestId, method: req.method, path: req.path, status: res.statusCode, duration },
+        'Request handled',
+      );
     } catch (e) {
       // ignore
     }
