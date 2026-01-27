@@ -1,6 +1,5 @@
-// Validate and export required env vars for producer-service using the shared env-validator
+// Validate and export required env vars for producer-service
 import { z } from 'zod';
-import { validateEnv } from '@notifly/env-validator';
 
 const schema = z.object({
   PG_CONNECTION: z.string().min(1, 'PG_CONNECTION is required'),
@@ -12,6 +11,17 @@ const schema = z.object({
 });
 
 export type ProducerEnv = z.infer<typeof schema>;
+
+function validateEnv<T>(schema: z.ZodTypeAny): T {
+  const result = schema.safeParse(process.env);
+  if (!result.success) {
+    // Print a readable error and stop startup
+    // eslint-disable-next-line no-console
+    console.error('Environment validation error:', result.error.format());
+    throw new Error('Invalid environment variables');
+  }
+  return result.data as unknown as T;
+}
 
 export const env = validateEnv<ProducerEnv>(schema);
 
