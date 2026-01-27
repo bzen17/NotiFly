@@ -1,9 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import logger from '../utils/logger';
-import { ERRORS } from '../constants';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
+import { ERRORS, JWT_DEFAULTS } from '../constants';
 
 export interface AuthUser {
   id: string;
@@ -32,7 +30,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
   }
   const token = auth[1];
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as any;
+    const payload = jwt.verify(token, JWT_DEFAULTS.JWT_SECRET) as any;
     req.user = {
       id: payload.sub,
       email: payload.email,

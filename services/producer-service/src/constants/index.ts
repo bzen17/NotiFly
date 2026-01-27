@@ -1,3 +1,5 @@
+import { JWT_ACCESS_EXP, JWT_REFRESH_EXP, JWT_SECRET } from '../config/env';
+
 /**
  * Shared constants for producer-service.
  * Keep descriptive names for errors, roles and jwt defaults.
@@ -22,8 +24,9 @@ export const ROLES = {
 };
 
 export const JWT_DEFAULTS = {
-  ACCESS_EXP: process.env.JWT_ACCESS_EXP || '15m',
-  REFRESH_EXP: process.env.JWT_REFRESH_EXP || '7d',
+  JWT_SECRET: JWT_SECRET || 'REDACTED',
+  ACCESS_EXP: JWT_ACCESS_EXP || '15m',
+  REFRESH_EXP: JWT_REFRESH_EXP || '7d',
 };
 
 export const STREAMS = {

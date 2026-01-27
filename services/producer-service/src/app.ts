@@ -7,6 +7,7 @@ import authRouter from './routes/auth.routes';
 import dashboardRouter from './routes/dashboard.routes';
 import { authMiddleware } from './middlewares/auth.middleware';
 import { requestLogger } from './middlewares/request.middleware';
+import { FRONTEND_ORIGIN } from './config/env';
 
 const app = express();
 
@@ -17,7 +18,7 @@ app.use(express.json());
 app.use(requestLogger);
 
 // Enable CORS for the internal frontend. Use FRONTEND_ORIGIN env var in production if needed.
-const allowedOrigin = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
+const allowedOrigin = FRONTEND_ORIGIN;
 app.use(cors({ origin: allowedOrigin }));
 
 // Public auth endpoints

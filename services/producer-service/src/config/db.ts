@@ -9,6 +9,14 @@ let pgPool: Pool | null = null;
 
 export async function connectToDatastores() {
   if (!redisClient) {
+    // Validate protocol: node-redis expects redis:// or rediss:// URLs.
+    if (REDIS_URL.startsWith('http://') || REDIS_URL.startsWith('https://')) {
+      throw new Error(
+        'Invalid Redis protocol in REDIS_URL: http(s) URLs are not supported by node-redis.\n' +
+          'If you are using Upstash, set UPSTASH_REDIS_URL to the Redis-compatible URL (rediss://...)\n' +
+          'Or set USE_CLOUD=false to use a local Redis instance and configure REDIS_HOST/REDIS_PORT.',
+      );
+    }
     redisClient = createClient({ url: REDIS_URL });
     await redisClient.connect();
   }

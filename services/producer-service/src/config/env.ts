@@ -2,7 +2,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const PORT = process.env.PORT || '3001';
-
+export const NODE_ENV = process.env.NODE_ENV || 'development';
+export const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
 export const REDIS_HOST = process.env.REDIS_HOST || process.env.REDIS_URL || 'localhost';
 export const REDIS_PORT = process.env.REDIS_PORT || '6379';
 export const REDIS_URL =
@@ -31,3 +32,7 @@ export const PG_CONNECTION =
   process.env.PG_CONNECTION ||
   process.env.DATABASE_URL ||
   `postgresql://${encodeURIComponent(PG_USER)}:${encodeURIComponent(PG_PASS)}@${PG_HOST}:${PG_PORT}/${PG_DB}`;
+
+export const JWT_SECRET = process.env.JWT_SECRET || 'REDACTED';
+export const JWT_ACCESS_EXP = process.env.JWT_ACCESS_EXP || '15m';
+export const JWT_REFRESH_EXP = process.env.JWT_REFRESH_EXP || '7d';

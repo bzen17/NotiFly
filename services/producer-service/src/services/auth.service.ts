@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { getMongo } from '../config/db';
 import { ROLES, JWT_DEFAULTS } from '../constants';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'REDACTED';
+const JWT_SECRET = JWT_DEFAULTS.JWT_SECRET;
 const ACCESS_EXP = JWT_DEFAULTS.ACCESS_EXP;
 const REFRESH_EXP = JWT_DEFAULTS.REFRESH_EXP;
 

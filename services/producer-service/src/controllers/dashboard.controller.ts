@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { getDashboardMetrics } from '../services/dashboard.service';
 import { getPgPool } from '../config/db';
-import { PG_CONNECTION } from '../config/env';
+import { NODE_ENV, PG_CONNECTION } from '../config/env';
 import logger from '../utils/logger';
 
 export async function dashboardMetricsController(req: Request, res: Response) {
@@ -10,7 +10,7 @@ export async function dashboardMetricsController(req: Request, res: Response) {
     const range = (req.query.range as string) || '24h';
     const metrics = await getDashboardMetrics(user, range);
     // Optional debug diagnostics: if ?debug=1 include DB connection info and simple checks
-    if ((req.query.debug as string) === '1' || process.env.NODE_ENV !== 'production') {
+    if ((req.query.debug as string) === '1' || NODE_ENV !== 'production') {
       try {
         const pg = getPgPool();
         const dbInfo: any = {};
@@ -46,7 +46,7 @@ export async function dashboardMetricsController(req: Request, res: Response) {
     logger.error({ err }, 'dashboardMetricsController error');
     const msg = err && (err as any).message ? (err as any).message : 'failed_to_compute_metrics';
     const payload: any = { error: 'failed_to_compute_metrics' };
-    if (process.env.NODE_ENV !== 'production') payload.details = msg;
+    if (NODE_ENV !== 'production') payload.details = msg;
     return res.status(500).json(payload);
   }
 }
