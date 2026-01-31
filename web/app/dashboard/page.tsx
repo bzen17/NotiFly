@@ -151,7 +151,13 @@ export default function DashboardPage() {
           );
         })()}
         {role === 'admin' && (
-          <Box sx={{ width: { xs: '100%', sm: '50%', md: '16.666%' }, display: 'flex', justifyContent: 'center' }}>
+          <Box
+            sx={{
+              width: { xs: '100%', sm: '50%', md: '16.666%' },
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
             <Card
               sx={{
                 height: 120,

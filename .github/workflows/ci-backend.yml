@@ -1,0 +1,55 @@
+name: CI - Backend
+
+# Backend CI runs on PRs to main and pushes to main when services/ or libs/ change.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'services/**'
+      - 'libs/**'
+      - 'tsconfig.base.json'
+      - 'package.json'
+  push:
+    branches: [main]
+    paths:
+      - 'services/**'
+      - 'libs/**'
+      - 'tsconfig.base.json'
+      - 'package.json'
+
+jobs:
+  backend-ci:
+    name: Backend CI (changed packages)
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-backend-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Cache npm (~/.npm)
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-cache-
+
+      - name: Run backend CI for changed packages
+        run: .github/scripts/run-backend-ci.sh
+
+  architecture-guard:
+    name: Architecture Guardrail
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run guardrail check
+        run: .github/scripts/guardrail-check.sh

@@ -116,7 +116,7 @@ How to deploy the single-service approach
    - To enable colocated workers set:
      - `ENABLE_ROUTER=true`
      - `ENABLE_EMAIL_WORKER=true`
-   - To run *only* the HTTP API (no spawned workers), set both flags to `false`.
+   - To run _only_ the HTTP API (no spawned workers), set both flags to `false`.
 6. Do NOT create separate `notifly-router` / `notifly-worker-email` services in Render if you intend to use the single-service approach — otherwise you'll have duplicate consumers. If you previously created separate worker services, either delete them or set the `ENABLE_*` flags appropriately.
 
 Operational notes and caveats
@@ -152,4 +152,3 @@ Files added by this guide
 ## Recent changes (2026-01-31)
 
 - A Postgres migration was added: `infra/sql/001-add-channel-to-deliveries.sql`. Apply it during your deployment/migration step so the Router and Workers can use the `channel` column for routing and worker assignment.
-

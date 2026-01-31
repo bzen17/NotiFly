@@ -151,36 +151,6 @@ npm test
 
 --
 
-## Developer workflow
-
-- Add delivery adapters under `libs/delivery-adapters/src` and implement the provider interface in `libs/delivery-adapters/src/interfaces/provider.interface.ts`.
-- Keep business logic in services; adapters should be thin wrappers around provider SDKs.
-- Use mocks in `libs/delivery-adapters` for local testing.
-
---
-
-## Common troubleshooting
-
-- If a service fails to start, check that Docker services (Postgres, Redis) are running and that `.env` variables are set.
-- Inspect DLQ via the admin UI or the Router/Producer logs to diagnose repeated failures.
-
---
-
-## Contributing
-
-- Fork the repository, create a feature branch, run tests and format changes before opening a PR.
-- Follow the existing TypeScript patterns and add unit tests for new adapters or services.
-
---
-
-## License
-
-This project is a starter/template — choose and add an appropriate license for your use.
-
---
-
-If you'd like, I can also add a smaller `README` inside each service folder with the exact env vars and route specs. The top-level `package.json` can be extended with workspace scripts to start all services locally with one command.
-
 ## Recent changes (2026-01-31)
 
 - Added a SQL migration: `infra/sql/001-add-channel-to-deliveries.sql` — run this migration against Postgres to add channel support in the `deliveries` table.

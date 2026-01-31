@@ -31,7 +31,9 @@ function spawnServiceScript(serviceName: string, script: string, name: string) {
             const mainPath = path.resolve(cwd, mainFile.replace(/^\.\//, ''));
             logger.info({ mainPath }, `Falling back to node ${mainPath} for ${name}`);
             const nodeChild = spawn(process.execPath, [mainPath], { cwd, stdio: 'inherit' });
-            nodeChild.on('exit', (code, signal) => logger.warn({ code, signal }, `${name} (node fallback) exited`));
+            nodeChild.on('exit', (code, signal) =>
+              logger.warn({ code, signal }, `${name} (node fallback) exited`),
+            );
           } else {
             logger.error({}, `No main/start entry in package.json for ${name}; cannot fallback`);
           }

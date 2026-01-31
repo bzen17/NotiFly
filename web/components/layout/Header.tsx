@@ -54,9 +54,14 @@ export default function Header({ onToggleSidebar }: { onToggleSidebar?: () => vo
   return (
     <AppBar
       position="fixed"
-      color="transparent"
-      elevation={0}
-      sx={{ borderBottom: 1, borderColor: 'divider' }}
+      color="default"
+      elevation={1}
+      sx={{
+        borderBottom: 1,
+        borderColor: 'divider',
+        backgroundColor: 'background.paper',
+        color: 'text.primary',
+      }}
     >
       <Toolbar>
         <IconButton edge="start" sx={{ mr: 2 }} onClick={onToggleSidebar} aria-label="menu">

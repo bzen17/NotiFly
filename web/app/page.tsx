@@ -30,8 +30,15 @@ export default function HomePage() {
   return (
     <Box sx={{ py: 4 }}>
       <Container maxWidth="xl">
-        <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, alignItems: 'start' }}>
-          <Box>
+        <Box
+          sx={{
+            display: 'grid',
+            gap: 2,
+            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+            alignItems: 'start',
+          }}
+        >
+          <Box sx={{ gridColumn: '1 / -1' }}>
             <Paper
               elevation={2}
               sx={{
@@ -67,7 +74,13 @@ export default function HomePage() {
                 Core capabilities
               </Typography>
 
-              <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' } }}>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gap: 2,
+                  gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
+                }}
+              >
                 {features.slice(0, 3).map((f) => (
                   <Box key={f.title}>
                     <Paper
@@ -93,15 +106,19 @@ export default function HomePage() {
             </Paper>
           </Box>
 
-          <Box />
-
           <Box sx={{ gridColumn: '1 / -1' }}>
             <Paper elevation={2} sx={{ p: 3, borderRadius: 2, width: '100%' }}>
               <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
                 Features at a glance
               </Typography>
 
-              <Box sx={{ display: 'grid', gap: 1, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' } }}>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gap: 1,
+                  gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
+                }}
+              >
                 {features.map((f) => (
                   <Box key={f.title}>
                     <Paper

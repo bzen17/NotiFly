@@ -39,4 +39,5 @@ export const JWT_REFRESH_EXP = process.env.JWT_REFRESH_EXP || '7d';
 
 // Optional feature flags for multi-component bootstrap
 export const ENABLE_ROUTER = (process.env.ENABLE_ROUTER || 'false').toLowerCase() === 'true';
-export const ENABLE_EMAIL_WORKER = (process.env.ENABLE_EMAIL_WORKER || 'false').toLowerCase() === 'true';
+export const ENABLE_EMAIL_WORKER =
+  (process.env.ENABLE_EMAIL_WORKER || 'false').toLowerCase() === 'true';

@@ -1,0 +1,52 @@
+name: CI - Web
+
+# Run on PRs to main and pushes to main, but only when web/ or shared config files change
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'web/**'
+      - 'tsconfig.base.json'
+      - 'package.json'
+  push:
+    branches: [main]
+    paths:
+      - 'web/**'
+      - 'tsconfig.base.json'
+      - 'package.json'
+
+jobs:
+  web:
+    name: Web CI (Prettier · ESLint · Typecheck · Tests · Build)
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-web-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --prefix web
+
+      - name: Prettier check
+        run: npx prettier --check "web/**/*.{ts,tsx,js,jsx,json,css,md}"
+
+      - name: ESLint
+        run: npx eslint "web/**/*.{ts,tsx,js,jsx}" --max-warnings=0
+
+      - name: Type check (tsc)
+        run: npx tsc --pretty --noEmit -p web/tsconfig.json
+
+      - name: Run unit tests
+        run: npm test --prefix web --if-present
+
+      - name: Build
+        run: npm run build --prefix web
