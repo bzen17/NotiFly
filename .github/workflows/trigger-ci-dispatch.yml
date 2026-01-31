@@ -8,7 +8,7 @@ on:
       ref:
         description: 'Git ref to run the CI workflows on'
         required: false
-        default: '${{ github.ref_name || "main" }}'
+        default: 'main'
 
 jobs:
   dispatch:
@@ -19,7 +19,7 @@ jobs:
         with:
           script: |
             const { owner, repo } = context.repo;
-            const ref = inputs.ref || context.ref.replace('refs/heads/', '') || 'main';
+            const ref = (inputs && inputs.ref) ? inputs.ref : (context.ref ? context.ref.replace('refs/heads/', '') : 'main');
             const workflows = ['ci-web.yml', 'ci-backend.yml'];
             for (const wf of workflows) {
               core.info(`Dispatching workflow ${wf} on ref ${ref}`);
