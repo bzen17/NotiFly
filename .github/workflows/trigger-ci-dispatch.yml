@@ -27,12 +27,12 @@ jobs:
             const ref = context.payload?.inputs?.ref || (context.ref ? context.ref.replace('refs/heads/', '') : 'main');
             const workflows = ['ci-web.yml', 'ci-backend.yml'];
             const token = process.env.DISPATCH_PAT || process.env.GITHUB_TOKEN;
-            const { Octokit } = require('@octokit/rest');
-            const oct = new Octokit({ auth: token });
+            const { getOctokit } = require('@actions/github');
+            const oct = getOctokit(token);
             for (const wf of workflows) {
               core.info(`Dispatching workflow ${wf} on ref ${ref}`);
               try {
-                await oct.actions.createWorkflowDispatch({ owner, repo, workflow_id: wf, ref });
+                await oct.rest.actions.createWorkflowDispatch({ owner, repo, workflow_id: wf, ref });
                 core.info(`Dispatched ${wf}`);
               } catch (err) {
                 core.warning(`Failed to dispatch ${wf}: ${err.message}`);
