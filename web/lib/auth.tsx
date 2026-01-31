@@ -30,7 +30,8 @@ function setStoredTokens(accessToken?: string | null, refreshToken?: string | nu
 }
 
 async function doRefresh(refreshToken: string) {
-  const res = await fetch('http://localhost:3001/v1/auth/refresh', {
+  const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const res = await fetch(`${baseURL}/v1/auth/refresh`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refreshToken }),

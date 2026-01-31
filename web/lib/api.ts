@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001';
+const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export const api = axios.create({
   baseURL: `${baseURL}/v1`,
@@ -42,7 +42,6 @@ api.interceptors.response.use(
     if (!refreshPromise) {
       refreshPromise = (async () => {
         try {
-          const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001';
           const resp = await fetch(`${baseURL}/v1/auth/refresh`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

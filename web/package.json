@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "dotenv -e .env.development -- next dev",
+    "local": "dotenv -e .env.local -- next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --ext .ts,.tsx"
@@ -22,6 +23,9 @@
     "recharts": "^3.6.0"
   },
   "devDependencies": {
+    "@types/node": "25.0.10",
+    "cross-env": "^10.1.0",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^8.0.0",
     "eslint-config-next": "^13.0.0",
     "typescript": "^5.0.0"
