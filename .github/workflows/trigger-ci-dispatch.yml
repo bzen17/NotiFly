@@ -1,5 +1,11 @@
+# Manual helper workflow to dispatch the existing CI workflows (ci-web.yml, ci-backend.yml)
+# Use Actions UI -> Run workflow to trigger both CI workflows on a given ref.
 name: Trigger CI runs (manual)
 
+# Grant token permission to create workflow dispatch events
+permissions:
+  contents: read
+  workflows: write
 # Manual helper workflow to dispatch the existing CI workflows (ci-web.yml, ci-backend.yml)
 # Use Actions UI -> Run workflow to trigger both CI workflows on a given ref.
 on:
@@ -28,5 +34,6 @@ jobs:
                 core.info(`Dispatched ${wf}`);
               } catch (err) {
                 core.warning(`Failed to dispatch ${wf}: ${err.message}`);
+                core.notice(`If you see 'Resource not accessible by integration', set a personal access token in secrets and use it instead.`);
               }
             }
