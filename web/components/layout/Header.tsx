@@ -11,6 +11,8 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
+import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../lib/auth';
 
@@ -67,9 +69,16 @@ export default function Header({ onToggleSidebar }: { onToggleSidebar?: () => vo
         <IconButton edge="start" sx={{ mr: 2 }} onClick={onToggleSidebar} aria-label="menu">
           <MenuIcon />
         </IconButton>
-        <Typography variant="h6" sx={{ flex: 1 }}>
-          notifly
-        </Typography>
+        <Box sx={{ flex: 1 }}>
+          <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}>
+              <Image src="/notifly-icon.svg" alt="Notifly" width={32} height={32} />
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                notifly
+              </Typography>
+            </Box>
+          </Link>
+        </Box>
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
           <IconButton>
             <NotificationsIcon />
