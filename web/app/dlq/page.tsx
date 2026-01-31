@@ -41,7 +41,7 @@ export default function DlqPage() {
       return { rowId, result: res.data };
     },
     onMutate: async (rowId: string) => {
-      await qc.cancelQueries(['dlq']);
+      await qc.cancelQueries({ queryKey: ['dlq'] });
       const previous = qc.getQueryData(['dlq']) as any[] | undefined;
       qc.setQueryData(
         ['dlq'],
@@ -58,7 +58,7 @@ export default function DlqPage() {
       const locked = data?.result?.requeueLockedUntil;
       if (locked) setRequeueLocks((s) => ({ ...s, [data.rowId]: new Date(locked).getTime() }));
     },
-    onSettled: () => qc.invalidateQueries(['dlq']),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['dlq'] }),
   });
 
   const campaignRequeue = useMutation({
@@ -67,7 +67,7 @@ export default function DlqPage() {
       return { campaignId, result: res.data };
     },
     onMutate: async (campaignId: string) => {
-      await qc.cancelQueries(['dlq']);
+      await qc.cancelQueries({ queryKey: ['dlq'] });
       return {};
     },
     onError: (err: any) => {},
@@ -83,7 +83,7 @@ export default function DlqPage() {
         setRequeueLocks((s) => ({ ...s, ...mapped }));
       }
     },
-    onSettled: () => qc.invalidateQueries(['dlq']),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['dlq'] }),
   });
 
   const [requeueLocks, setRequeueLocks] = React.useState<Record<string, number>>({});

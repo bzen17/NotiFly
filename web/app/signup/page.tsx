@@ -91,11 +91,11 @@ export default function SignupPage() {
           <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
             Sign Up
           </Button>
-          <Grid container justifyContent="flex-end">
-            <Grid item>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Box>
               <Link href="/login">Already have an account? Sign in</Link>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         </Box>
       </Box>
     </Container>

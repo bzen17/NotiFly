@@ -20,7 +20,7 @@ export function useCreateCampaign() {
       return data;
     },
     onSuccess() {
-      qc.invalidateQueries(['campaigns']);
+      qc.invalidateQueries({ queryKey: ['campaigns'] });
     },
   });
 }

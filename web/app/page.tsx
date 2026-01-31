@@ -30,8 +30,8 @@ export default function HomePage() {
   return (
     <Box sx={{ py: 4 }}>
       <Container maxWidth="xl">
-        <Grid container spacing={2} alignItems="flex-start">
-          <Grid item xs={12} md={6}>
+        <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, alignItems: 'start' }}>
+          <Box>
             <Paper
               elevation={2}
               sx={{
@@ -67,9 +67,9 @@ export default function HomePage() {
                 Core capabilities
               </Typography>
 
-              <Grid container spacing={2}>
+              <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' } }}>
                 {features.slice(0, 3).map((f) => (
-                  <Grid key={f.title} item xs={12} sm={4}>
+                  <Box key={f.title}>
                     <Paper
                       sx={{ display: 'flex', gap: 2, alignItems: 'center', p: 2 }}
                       elevation={0}
@@ -87,25 +87,23 @@ export default function HomePage() {
                         </Typography>
                       </Box>
                     </Paper>
-                  </Grid>
+                  </Box>
                 ))}
-              </Grid>
+              </Box>
             </Paper>
-          </Grid>
+          </Box>
 
-          <Grid item xs={12} md={6}>
-            {/* right column intentionally left blank so top row keeps two equal columns */}
-          </Grid>
+          <Box />
 
-          <Grid item xs={12}>
+          <Box sx={{ gridColumn: '1 / -1' }}>
             <Paper elevation={2} sx={{ p: 3, borderRadius: 2, width: '100%' }}>
               <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
                 Features at a glance
               </Typography>
 
-              <Grid container spacing={1}>
+              <Box sx={{ display: 'grid', gap: 1, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' } }}>
                 {features.map((f) => (
-                  <Grid key={f.title} item xs={12} sm={6}>
+                  <Box key={f.title}>
                     <Paper
                       sx={{ display: 'flex', gap: 2, alignItems: 'center', p: 1 }}
                       elevation={0}
@@ -122,13 +120,13 @@ export default function HomePage() {
                         </Typography>
                       </Box>
                     </Paper>
-                  </Grid>
+                  </Box>
                 ))}
-              </Grid>
+              </Box>
             </Paper>
-          </Grid>
+          </Box>
 
-          <Grid item xs={12}>
+          <Box sx={{ gridColumn: '1 / -1' }}>
             <Paper elevation={1} sx={{ p: 3, borderRadius: 2, width: '100%' }}>
               <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
                 Upcoming
@@ -147,17 +145,17 @@ export default function HomePage() {
                 automation. Expect early access programs soon.
               </Typography>
             </Paper>
-          </Grid>
+          </Box>
 
-          <Grid item xs={12}>
+          <Box sx={{ gridColumn: '1 / -1' }}>
             <Paper elevation={0} sx={{ p: 2, borderRadius: 2, background: 'transparent' }}>
               <Typography variant="caption" color="text.secondary">
                 Need help? Visit the docs or create your first campaign to see how fast notifly
                 delivers.
               </Typography>
             </Paper>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Container>
     </Box>
   );
