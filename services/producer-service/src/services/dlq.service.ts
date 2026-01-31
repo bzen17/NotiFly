@@ -24,8 +24,8 @@ async function deleteDlqEntriesFor(
     if (opts.id) {
       if (typeof redis.xDel === 'function') {
         await redis.xDel(DLQ_STREAM, opts.id);
-      } else if (typeof (redis as any).xdel === 'function') {
-        await (redis as any).xdel(DLQ_STREAM, opts.id);
+      } else if (typeof redis.xdel === 'function') {
+        await redis.xdel(DLQ_STREAM, opts.id);
       }
       return;
     }
@@ -33,10 +33,10 @@ async function deleteDlqEntriesFor(
     const start = '-';
     const end = '+';
     let entries: any[] = [];
-    if (typeof (redis as any).xRange === 'function') {
-      entries = await (redis as any).xRange(DLQ_STREAM, start, end);
-    } else if (typeof (redis as any).xrange === 'function') {
-      entries = await (redis as any).xrange(DLQ_STREAM, start, end);
+    if (typeof redis.xRange === 'function') {
+      entries = await redis.xRange(DLQ_STREAM, start, end);
+    } else if (typeof redis.xrange === 'function') {
+      entries = await redis.xrange(DLQ_STREAM, start, end);
     }
     for (const e of entries) {
       const id = e.id || e[0];
@@ -55,8 +55,8 @@ async function deleteDlqEntriesFor(
       try {
         if (typeof redis.xDel === 'function') {
           await redis.xDel(DLQ_STREAM, id);
-        } else if (typeof (redis as any).xdel === 'function') {
-          await (redis as any).xdel(DLQ_STREAM, id);
+        } else if (typeof redis.xdel === 'function') {
+          await redis.xdel(DLQ_STREAM, id);
         }
         logger.info(
           { id, campaignId: cid, recipient: rec },
@@ -126,7 +126,7 @@ export async function listDlq({ page = 1, limit = 50, filter = {} }: any): Promi
     new Set(parsed.map((p: any) => p.payload?.campaignId || p.payload?.event_id).filter(Boolean)),
   );
 
-  let campaignMeta: Record<string, any> = {};
+  const campaignMeta: Record<string, any> = {};
   if (campaignIds.length > 0) {
     try {
       const mongo = await getMongo();

@@ -3,6 +3,7 @@
     "target": "ES2022",
     "lib": ["DOM", "ES2022"],
     "jsx": "react-jsx",
+    "types": ["vitest", "node"],
     "module": "ESNext",
     "moduleResolution": "Node",
     "strict": true,

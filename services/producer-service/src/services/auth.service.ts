@@ -70,7 +70,7 @@ export function generateAccessToken(user: any) {
     role: user.role,
   };
   return jwt.sign(
-    payload as any,
+    payload,
     JWT_SECRET as any,
     { subject: String(user._id || user.id), expiresIn: ACCESS_EXP } as any,
   );

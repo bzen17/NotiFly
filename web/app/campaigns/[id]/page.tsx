@@ -104,9 +104,6 @@ export default function CampaignDetails() {
         // Disable requeue when delivered, or when status is 'requeued' and lock window hasn't expired
         const status = (params.row.status || '') as string;
         const isLocked = !!(lockedTs && lockedTs > now);
-        console.log(
-          `Row ${rowId} - status: ${status?.toLowerCase() === 'delivered'}, isLoading: ${isLoading}, isLocked: ${isLocked}, lockedTs: ${new Date(lockedTs).toLocaleString()}, now: ${new Date(now).toLocaleString()}, lockedTs > now: ${lockedTs > now}`,
-        );
         let disabled = Boolean(isLoading || status?.toLowerCase() === STATUS.DELIVERED || isLocked);
         let tooltip =
           status?.toLowerCase() === STATUS.DELIVERED ? 'Already delivered' : 'Requeue delivery';
@@ -131,9 +128,6 @@ export default function CampaignDetails() {
                     const locked = res.data?.requeueLockedUntil || params.row.requeueLockedUntil;
                     if (locked) {
                       setRequeueLocks((s) => ({ ...s, [rowId]: new Date(locked).getTime() }));
-                      console.log(
-                        `${rowId} - ${res.data?.requeueLockedUntil} - ${new Date(locked).toLocaleString()}`,
-                      );
                     }
                     setSnack({ open: true, message: 'Requeued', severity: 'success' });
                     qc.invalidateQueries({ queryKey: ['campaign', id, 'deliveries', 1] });

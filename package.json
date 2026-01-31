@@ -4,9 +4,15 @@
   "version": "1.0.0",
   "scripts": {
     "format": "npx prettier --write \"**/*.{js,ts,tsx,jsx,json,md,css,scss,html,yml,yaml,sql,mdx}\"",
-    "format:check": "npx prettier --check \"**/*.{js,ts,tsx,jsx,json,md,css,scss,html,yml,yaml,sql,mdx}\""
+    "format:check": "npx prettier --check \"**/*.{js,ts,tsx,jsx,json,md,css,scss,html,yml,yaml,sql,mdx}\"",
+    "lint": "npx eslint . --ext .ts,.tsx,.js --max-warnings=0",
+    "lint:fix": "npx eslint . --ext .ts,.tsx,.js --fix"
   },
   "devDependencies": {
+    "@types/react": "^19.2.10",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
     "prettier": "^3.7.4"
   },
   "workspaces": [

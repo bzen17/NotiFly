@@ -7,7 +7,11 @@
     "build": "tsc -p .",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "local": "NODE_ENV=development USE_CLOUD=false ts-node-dev --respawn --transpile-only src/index.ts",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "lint": "eslint . --ext .ts,.js --max-warnings=0",
+    "lint:fix": "eslint . --ext .ts,.js --fix"
+    ,
+    "test": "jest --passWithNoTests --runInBand"
   },
   "dependencies": {
     "dotenv": "^16.0.0",
@@ -20,6 +24,12 @@
   "devDependencies": {
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.0.0",
-    "pino-pretty": "^9.2.0"
+    "@types/jest": "^30.0.0",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6",
+    "pino-pretty": "^9.2.0",
+    "eslint": "^8.57.1",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0"
   }
 }

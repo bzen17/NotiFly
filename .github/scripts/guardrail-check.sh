@@ -1,13 +1,25 @@
+
 #!/usr/bin/env bash
 set -euo pipefail
 
 # Architecture guardrail: prevent accidental HTTP server exposure in router-service and worker-email
+# Exclude common generated and dependency folders (node_modules, dist, .next, coverage)
 FAIL=0
+EXCLUDE_DIRS=(node_modules dist .next coverage)
+
 for d in services/router-service services/worker-email; do
   if [ -d "$d" ]; then
-    if grep -R --line-number -E "listen\(|createServer\(|http.createServer" "$d" >/dev/null 2>&1; then
+    echo "Scanning $d (excluding ${EXCLUDE_DIRS[*]})"
+    matches=$(grep -R --line-number -E \
+      --exclude-dir=${EXCLUDE_DIRS[0]} \
+      --exclude-dir=${EXCLUDE_DIRS[1]} \
+      --exclude-dir=${EXCLUDE_DIRS[2]} \
+      --exclude-dir=${EXCLUDE_DIRS[3]} \
+      "listen\(|createServer\(|http\.createServer" "$d" || true)
+
+    if [ -n "$matches" ]; then
       echo "ERROR: HTTP server pattern detected in $d. These services must not expose HTTP servers."
-      grep -R --line-number -E "listen\(|createServer\(|http.createServer" "$d" || true
+      echo "$matches"
       FAIL=1
     fi
   fi

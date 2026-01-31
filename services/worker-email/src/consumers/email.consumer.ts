@@ -129,10 +129,10 @@ async function checkAndProcessRetries(redis: any, mongo: any, pg: any) {
   // Read a small batch of retry entries and process those that are due
   let entries: any[] = [];
   try {
-    if (typeof (redis as any).xRange === 'function') {
-      entries = await (redis as any).xRange('notifications.retry', '-', '+', { COUNT: 50 });
-    } else if (typeof (redis as any).xrange === 'function') {
-      entries = await (redis as any).xrange('notifications.retry', '-', '+', 'COUNT', '50');
+    if (typeof redis.xRange === 'function') {
+      entries = await redis.xRange('notifications.retry', '-', '+', { COUNT: 50 });
+    } else if (typeof redis.xrange === 'function') {
+      entries = await redis.xrange('notifications.retry', '-', '+', 'COUNT', '50');
     }
   } catch (err) {
     log.warn({ err }, 'failed to read retry stream');
@@ -155,8 +155,7 @@ async function checkAndProcessRetries(redis: any, mongo: any, pg: any) {
     if (!payload || !payload.when || !payload.campaignId) {
       // malformed -> delete
       try {
-        if (typeof (redis as any).xDel === 'function')
-          await (redis as any).xDel('notifications.retry', id);
+        if (typeof redis.xDel === 'function') await redis.xDel('notifications.retry', id);
       } catch (err) {
         log.warn({ err, id }, 'failed to delete malformed retry entry');
       }
@@ -178,8 +177,7 @@ async function checkAndProcessRetries(redis: any, mongo: any, pg: any) {
       await processMessage(redis, mongo, pg, [id, { body: JSON.stringify(body) }]);
       // remove entry after processing
       try {
-        if (typeof (redis as any).xDel === 'function')
-          await (redis as any).xDel('notifications.retry', id);
+        if (typeof redis.xDel === 'function') await redis.xDel('notifications.retry', id);
       } catch (err) {
         log.warn({ err, id }, 'failed to delete processed retry entry');
       }

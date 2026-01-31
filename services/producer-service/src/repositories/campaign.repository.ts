@@ -1,21 +1,15 @@
 export async function insertEvent(mongo: any, event: any) {
-  const collection = (mongo as any).db
-    ? (mongo as any).db().collection('campaigns')
-    : (mongo as any).collection('campaigns');
+  const collection = mongo.db ? mongo.db().collection('campaigns') : mongo.collection('campaigns');
   return collection.insertOne(event);
 }
 
 export async function findById(mongo: any, id: string) {
-  const collection = (mongo as any).db
-    ? (mongo as any).db().collection('campaigns')
-    : (mongo as any).collection('campaigns');
+  const collection = mongo.db ? mongo.db().collection('campaigns') : mongo.collection('campaigns');
   return collection.findOne({ _id: id });
 }
 
 export async function list(mongo: any, { skip = 0, limit = 20, filter = {} }: any) {
-  const collection = (mongo as any).db
-    ? (mongo as any).db().collection('campaigns')
-    : (mongo as any).collection('campaigns');
+  const collection = mongo.db ? mongo.db().collection('campaigns') : mongo.collection('campaigns');
   const query = filter || {};
   const cursor = collection
     .find(query)

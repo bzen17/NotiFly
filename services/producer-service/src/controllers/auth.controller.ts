@@ -15,7 +15,6 @@ export async function signupController(req: Request, res: Response) {
   const { email, password, name, tenantId } = req.body;
   if (!email || !password || !name)
     return res.status(400).json({ error: ERRORS.EMAIL_PASSWORD_NAME_REQUIRED });
-  const coll = (require('mongodb').MongoClient as any).prototype; // placeholder
   const mongo = require('../config/db').getMongo();
   const db = mongo.db ? mongo.db() : mongo;
   const exists = await db.collection('users').findOne({ email });
@@ -60,7 +59,6 @@ export async function refreshController(req: Request, res: Response) {
   const { refreshToken } = req.body;
   if (!refreshToken) return res.status(400).json({ error: ERRORS.REFRESH_REQUIRED });
   // Try to find user with this refresh token
-  const userColl = (require('mongodb').MongoClient as any).prototype; // placeholder to satisfy types
   const mongo = require('../config/db').getMongo();
   const db = mongo.db ? mongo.db() : mongo;
   const found = await db.collection('users').findOne({ refreshToken });

@@ -25,9 +25,9 @@ async function publishPointer(redis: any, stream: string, fields: Record<string,
   if (typeof redis.xAdd === 'function') {
     return redis.xAdd(stream, '*', fields);
   }
-  if (typeof (redis as any).xadd === 'function') {
+  if (typeof redis.xadd === 'function') {
     const flat = Object.entries(fields).flat();
-    return (redis as any).xadd(stream, '*', ...flat);
+    return redis.xadd(stream, '*', ...flat);
   }
   throw new Error(
     'Redis client does not support XADD; please use node-redis or provide an adapter',

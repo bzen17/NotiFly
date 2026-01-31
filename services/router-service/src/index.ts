@@ -65,7 +65,7 @@ export async function runRouter() {
         for (const message of messages) {
           const id = message.id;
           const fields = message.message;
-          const f = Array.isArray(fields) ? parseFields(fields as string[]) : (fields as any);
+          const f = Array.isArray(fields) ? parseFields(fields as string[]) : fields;
           // Parse campaign pointer and payload from the stream entry
           const explicitcampaignId = f.campaignId;
           const raw = f.payload || f.data || '{}';
@@ -84,8 +84,8 @@ export async function runRouter() {
           );
 
           // If this is a targeted requeue for a single recipient, bypass the campaign-level dedupe
-          const requeueFlag = (f.requeue ||
-            (campaign && (campaign.requeue || campaign.requeue === true))) as any;
+          const requeueFlag =
+            f.requeue || (campaign && (campaign.requeue || campaign.requeue === true));
           const explicitRecipient = f.recipient || campaign?.recipient || campaign?.recipients;
           let allowed = true;
           if (!requeueFlag) {
@@ -106,7 +106,7 @@ export async function runRouter() {
                 ? (mongo as any).db(MONGO_DB).collection('campaigns')
                 : (mongo as any).collection('campaigns');
             const found = await coll.findOne({ _id: campaignId });
-            if (found) dbCampaign = { ...(found as any), ...(campaign || {}) };
+            if (found) dbCampaign = { ...found, ...(campaign || {}) };
             logger.debug({ campaignId, found: !!found }, 'Loaded campaign from mongo');
           }
           // Expand recipients and fan-out to channel streams
