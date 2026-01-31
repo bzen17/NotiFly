@@ -1,0 +1,32 @@
+name: Trigger CI runs (manual)
+
+# Manual helper workflow to dispatch the existing CI workflows (ci-web.yml, ci-backend.yml)
+# Use Actions UI -> Run workflow to trigger both CI workflows on a given ref.
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to run the CI workflows on'
+        required: false
+        default: '${{ github.ref_name || "main" }}'
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch CI workflows
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const ref = inputs.ref || context.ref.replace('refs/heads/', '') || 'main';
+            const workflows = ['ci-web.yml', 'ci-backend.yml'];
+            for (const wf of workflows) {
+              core.info(`Dispatching workflow ${wf} on ref ${ref}`);
+              try {
+                await github.rest.actions.createWorkflowDispatch({ owner, repo, workflow_id: wf, ref });
+                core.info(`Dispatched ${wf}`);
+              } catch (err) {
+                core.warning(`Failed to dispatch ${wf}: ${err.message}`);
+              }
+            }
