@@ -6,7 +6,14 @@
     "format": "npx prettier --write \"**/*.{js,ts,tsx,jsx,json,md,css,scss,html,yml,yaml,sql,mdx}\"",
     "format:check": "npx prettier --check \"**/*.{js,ts,tsx,jsx,json,md,css,scss,html,yml,yaml,sql,mdx}\"",
     "lint": "npx eslint . --ext .ts,.tsx,.js --max-warnings=0",
-    "lint:fix": "npx eslint . --ext .ts,.tsx,.js --fix"
+    "lint:fix": "npx eslint . --ext .ts,.tsx,.js --fix",
+    "build:libs": "npm --prefix libs/delivery-adapters ci --include=dev && npm --prefix libs/delivery-adapters run build",
+    "build:router": "npm --prefix services/router-service ci --include=dev && npm --prefix services/router-service run build",
+    "build:worker-email": "npm --prefix services/worker-email ci --include=dev && npm --prefix services/worker-email run build",
+    "build:producer": "npm --prefix services/producer-service ci --include=dev && npm --prefix services/producer-service run build",
+    "build:services": "npm run build:router && npm run build:worker-email && npm run build:producer",
+    "build:all": "npm run build:libs && npm run build:services",
+    "package:single": "sh ./scripts/package-single.sh"
   },
   "devDependencies": {
     "@types/react": "^19.2.10",

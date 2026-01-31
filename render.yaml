@@ -13,12 +13,7 @@ services:
     repo: 'https://github.com/bzen17/NotiFly'
     branch: main
     root: services/producer-service
-    buildCommand: |
-      # install tools and build shared libs first
-      npm ci --include=dev && cd libs/delivery-adapters && npm ci --include=dev && npm run build && cd - \
-      && cd services/router-service && npm ci --include=dev && npm run build && cd - \
-      && cd services/worker-email && npm ci --include=dev && npm run build && cd - \
-      && cd services/producer-service && npm run build
+    buildCommand: 'npm install && npm run build:all && chmod +x scripts/package-single.sh && ./scripts/package-single.sh
     startCommand: npm run start
     autoDeploy: true
 
