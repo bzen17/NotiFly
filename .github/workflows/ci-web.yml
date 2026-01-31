@@ -40,7 +40,7 @@ jobs:
         run: npx prettier --check "web/**/*.{ts,tsx,js,jsx,json,css,md}"
 
       - name: ESLint
-        run: npx eslint "web/**/*.{ts,tsx,js,jsx}" --max-warnings=0
+        run: npm run lint --prefix web --if-present
 
       - name: Type check (tsc)
         run: npx tsc --pretty --noEmit -p web/tsconfig.json

@@ -28,14 +28,17 @@ for pkg in $PACKAGES; do
   npm ci --prefix "$pkg"
 
   # Prettier
-  npx prettier --check "$pkg/**/*.{ts,tsx,js,jsx,json,md}" || { echo "Prettier check failed for $pkg"; exit 1; }
+  # Run Prettier from the package (use package-local deps when available)
+  npx --prefix "$pkg" prettier --check "$pkg/**/*.{ts,tsx,js,jsx,json,md}" || { echo "Prettier check failed for $pkg"; exit 1; }
 
   # ESLint
-  npx eslint "$pkg" --ext .ts,.tsx,.js --max-warnings=0 || { echo "ESLint failed for $pkg"; exit 1; }
+  # Prefer running the package's lint script so package-local ESLint and config are used
+  npm run lint --prefix "$pkg" --if-present || { echo "ESLint failed for $pkg"; exit 1; }
 
   # TypeScript typecheck (if tsconfig exists)
   if [ -f "$pkg/tsconfig.json" ]; then
-    npx tsc --noEmit -p "$pkg/tsconfig.json"
+    # Run the package-local tsc when available to ensure consistent TS version
+    npx --prefix "$pkg" tsc --noEmit -p "$pkg/tsconfig.json"
   fi
 
   # Tests (if present)

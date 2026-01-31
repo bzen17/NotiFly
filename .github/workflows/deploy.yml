@@ -1,10 +1,13 @@
 name: Deploy
 
-# Deploy runs only on push to main. It uses path filters to deploy frontend (Vercel)
+# Deploy runs after CI workflows complete. It uses path filters to deploy frontend (Vercel)
 # and backend (Render or placeholder) only when the relevant paths changed.
+# We trigger this workflow on completion of CI workflows and then verify that the
+# corresponding CI run for the current commit succeeded before deploying.
 on:
-  push:
-    branches: [main]
+  workflow_run:
+    workflows: ["CI - Web", "CI - Backend"]
+    types: [completed]
 
 jobs:
   filter:
@@ -30,7 +33,7 @@ jobs:
 
   deploy-web:
     name: Deploy Web to Vercel
-    needs: filter
+    needs: [filter, check-ci]
     if: needs.filter.outputs.web_changed == 'true'
     runs-on: ubuntu-latest
     steps:
@@ -48,7 +51,7 @@ jobs:
 
   deploy-backend:
     name: Deploy Backend (Render placeholder)
-    needs: filter
+    needs: [filter, check-ci]
     if: needs.filter.outputs.backend_changed == 'true'
     runs-on: ubuntu-latest
     steps:
@@ -56,18 +59,66 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Trigger Render deploy (placeholder)
-        if: ${{ secrets.RENDER_API_KEY != '' }}
         run: |
+          if [ -z "${RENDER_API_KEY}" ]; then
+            echo "No Render deployment configured. Set RENDER_API_KEY/RENDER_SERVICE_ID in repository secrets to enable."
+            exit 0
+          fi
           echo "Triggering Render deploy for changed services..."
-          # Example: curl -X POST -H 'Authorization: Bearer $RENDER_API_KEY' \
-          #   -H 'Content-Type: application/json' \
-          #   -d '{"serviceId":"'$RENDER_SERVICE_ID'"}' \
+          # Example: curl -X POST -H "Authorization: Bearer ${RENDER_API_KEY}" \
+          #   -H "Content-Type: application/json" \
+          #   -d '{"serviceId":"'"${RENDER_SERVICE_ID}"'"}' \
           #   https://api.render.com/deploys
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
 
-      - name: No Render secrets configured
-        if: ${{ secrets.RENDER_API_KEY == '' }}
-        run: |
-          echo "No Render deployment configured. Set RENDER_API_KEY/RENDER_SERVICE_ID in repository secrets to enable."
+  check-ci:
+    name: Verify CI status for changed areas
+    needs: filter
+    runs-on: ubuntu-latest
+    outputs:
+      web_ok: ${{ steps.verify.outputs.web_ok }}
+      backend_ok: ${{ steps.verify.outputs.backend_ok }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify CI workflow runs
+        id: verify
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const sha = process.env.GITHUB_SHA || context.payload.workflow_run?.head_sha || context.sha;
+            const filterWeb = '${{ needs.filter.outputs.web_changed }}' === 'true';
+            const filterBackend = '${{ needs.filter.outputs.backend_changed }}' === 'true';
+
+            async function waitForWorkflow(workflowFile) {
+              // Poll for the workflow run for this commit. Timeout after ~6 minutes.
+              for (let i = 0; i < 36; i++) {
+                const runs = await github.rest.actions.listWorkflowRuns({ owner, repo, workflow_id: workflowFile, per_page: 50 });
+                const run = runs.data.workflow_runs.find(r => r.head_sha === sha);
+                if (run) {
+                  if (run.status === 'completed') return run.conclusion === 'success';
+                  // still running
+                }
+                await new Promise(r => setTimeout(r, 10000));
+              }
+              return false;
+            }
+
+            let webOk = true;
+            let backendOk = true;
+            if (filterWeb) {
+              webOk = await waitForWorkflow('ci-web.yml');
+            }
+            if (filterBackend) {
+              backendOk = await waitForWorkflow('ci-backend.yml');
+            }
+
+            if (!webOk || !backendOk) {
+              core.setFailed('One or more required CI workflows did not succeed for this commit. Aborting deploy.');
+            }
+
+            return { web_ok: webOk.toString(), backend_ok: backendOk.toString() };
