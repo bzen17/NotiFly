@@ -19,20 +19,16 @@ jobs:
     steps:
       - name: Dispatch CI workflows
         uses: actions/github-script@v6
-        env:
-          DISPATCH_PAT: ${{ secrets.DISPATCH_PAT }}
         with:
+          github-token: ${{ secrets.DISPATCH_PAT || secrets.GITHUB_TOKEN }}
           script: |
             const { owner, repo } = context.repo;
             const ref = context.payload?.inputs?.ref || (context.ref ? context.ref.replace('refs/heads/', '') : 'main');
             const workflows = ['ci-web.yml', 'ci-backend.yml'];
-            const token = process.env.DISPATCH_PAT || process.env.GITHUB_TOKEN;
-            const { getOctokit } = require('@actions/github');
-            const oct = getOctokit(token);
             for (const wf of workflows) {
               core.info(`Dispatching workflow ${wf} on ref ${ref}`);
               try {
-                await oct.rest.actions.createWorkflowDispatch({ owner, repo, workflow_id: wf, ref });
+                await github.rest.actions.createWorkflowDispatch({ owner, repo, workflow_id: wf, ref });
                 core.info(`Dispatched ${wf}`);
               } catch (err) {
                 core.warning(`Failed to dispatch ${wf}: ${err.message}`);
