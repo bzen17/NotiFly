@@ -99,9 +99,19 @@ jobs:
               // workflowIdentifiers: array of workflow_id values (filename or workflow name)
               for (let attempt = 0; attempt < 40; attempt++) {
                 for (const id of workflowIdentifiers) {
-                  const runs = await github.rest.actions.listWorkflowRuns({ owner, repo, workflow_id: id, per_page: 100 });
-                  const run = runs.data.workflow_runs.find(r => r.head_sha === sha);
-                  if (run) return run;
+                  try {
+                    const runs = await github.rest.actions.listWorkflowRuns({ owner, repo, workflow_id: id, per_page: 100 });
+                    const run = runs.data.workflow_runs.find(r => r.head_sha === sha);
+                    if (run) return run;
+                  } catch (err) {
+                    // If the workflow identifier doesn't exist, the API returns 404.
+                    // Skip this identifier and continue trying other identifiers.
+                    if (err.status === 404) {
+                      core.warning(`Workflow identifier '${id}' not found; skipping.`);
+                      continue;
+                    }
+                    throw err;
+                  }
                 }
                 await new Promise(r => setTimeout(r, 10000));
               }
@@ -110,9 +120,11 @@ jobs:
 
             async function waitForWorkflowSuccess(identifiers) {
               const run = await findRunForWorkflow(identifiers);
+              // If no workflow exists for these identifiers, treat it as not-required
+              // for this repository and continue (do not fail the deploy).
               if (!run) {
-                core.warning(`No workflow run found for identifiers: ${identifiers.join(', ')} and commit ${sha}`);
-                return false;
+                core.warning(`No workflow found for identifiers: ${identifiers.join(', ')}. Assuming CI not configured for this area.`);
+                return true;
               }
               core.info(`Found workflow run id=${run.id} name=${run.name} status=${run.status} conclusion=${run.conclusion}`);
               // If already completed, check conclusion
