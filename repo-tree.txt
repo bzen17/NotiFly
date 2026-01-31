@@ -1,0 +1,188 @@
+notifly/
+├── .env.example
+├── .gitignore
+├── .prettierignore
+├── .prettierrc.cjs
+├── docker-compose.yml
+├── format.sh
+├── package.json
+├── package-lock.json
+├── tsconfig.base.json
+├── READEME.md
+├── libs/
+│   └── delivery-adapters/
+│       ├── .env.example
+│       ├── README.md
+│       ├── package.json
+│       ├── tsconfig.json
+│       └── src/
+│           ├── index.ts
+│           ├── interfaces/
+│           │   └── provider.interface.ts
+│           ├── errors/
+│           │   └── provider.errors.ts
+│           ├── email/
+│           │   ├── sendgrid.adapter.ts
+│           │   ├── ses.adapter.ts
+│           │   └── mock.adapter.ts
+│           ├── sms/
+│           │   ├── twilio.adapter.ts
+│           │   └── mock.adapter.ts
+│           └── push/
+│               └── fcm.adapter.ts
+├── infra/
+├── services/
+│   ├── producer-service/
+│   │   ├── .env.example
+│   │   ├── package.json
+│   │   ├── package-lock.json
+│   │   ├── tsconfig.json
+│   │   ├── jest.config.js
+│   │   ├── README.md
+│   │   └── src/
+│   │       ├── index.ts
+│   │       ├── app.ts
+│   │       ├── config/
+│   │       │   ├── db.ts
+│   │       │   └── env.ts
+│   │       ├── constants/
+│   │       │   └── index.ts
+│   │       ├── controllers/
+│   │       │   ├── auth.controller.ts
+│   │       │   ├── campaigns.command.controller.ts
+│   │       │   ├── campaigns.query.controller.ts
+│   │       │   ├── dashboard.controller.ts
+│   │       │   └── dlq.controller.ts
+│   │       ├── middlewares/
+│   │       │   ├── auth.middleware.ts
+│   │       │   ├── error.middleware.ts
+│   │       │   └── request.middleware.ts
+│   │       ├── repositories/
+│   │       │   ├── campaign.repository.ts
+│   │       │   └── delivery.repository.ts
+│   │       ├── routes/
+│   │       │   ├── auth.routes.ts
+│   │       │   ├── campaigns.routes.ts
+│   │       │   ├── dashboard.routes.ts
+│   │       │   └── dlq.routes.ts
+│   │       ├── schemas/
+│   │       │   └── notification.schema.ts
+│   │       ├── services/
+│   │       │   ├── auth.service.ts
+│   │       │   ├── campaign.command.service.ts
+│   │       │   ├── campaign.query.service.ts
+│   │       │   ├── stream-producer.service.ts
+│   │       │   ├── dlq.service.ts
+│   │       │   ├── dashboard.service.ts
+│   │       │   └── event-store.service.ts
+│   │       ├── types/
+│   │       │   └── notification.types.ts
+│   │       └── utils/
+│   │           └── logger.ts
+│   │       └── tests/
+│   │           └── sendNotification.test.ts
+│   ├── router-service/
+│   │   ├── .env.example
+│   │   ├── package.json
+│   │   ├── package-lock.json
+│   │   ├── tsconfig.json
+│   │   ├── README.md
+│   │   └── src/
+│   │       ├── index.ts
+│   │       ├── README.md
+│   │       ├── config/
+│   │       │   ├── db.ts
+│   │       │   └── env.ts
+│   │       ├── clients/
+│   │       │   └── redis.ts
+│   │       ├── consumers/
+│   │       │   └── incoming.consumer.ts
+│   │       ├── services/
+│   │       │   ├── routing.service.ts
+│   │       │   ├── campaign-loader.service.ts
+│   │       │   ├── recipient-expander.service.ts
+│   │       │   ├── stream-producer.service.ts
+│   │       │   └── delivery-writer.service.ts
+│   │       ├── types/
+│   │       │   ├── routing.types.ts
+│   │       │   └── types.ts
+│   │       ├── utils/
+│   │       │   ├── logger.ts
+│   │       │   └── id-generator.ts
+│   │       └── tests/
+│   │           └── routing.test.ts
+│   └── worker-email/
+│       ├── .env.example
+│       ├── package.json
+│       ├── package-lock.json
+│       ├── tsconfig.json
+│       ├── README.md
+│       └── src/
+│           ├── index.ts
+│           ├── adapter/
+│           │   └── index.ts
+│           ├── config/
+│           │   ├── db.ts
+│           │   └── env.ts
+│           ├── constants/
+│           │   └── index.ts
+│           ├── consumers/
+│           │   └── email.consumer.ts
+│           ├── services/
+│           │   ├── consumer.service.ts
+│           │   ├── delivery-status.service.ts
+│           │   ├── dlq.service.ts
+│           │   ├── retry.service.ts
+│           │   ├── dedupe.service.ts
+│           │   └── rate-limit.service.ts
+│           ├── types/
+│           │   └── email.types.ts
+│           ├── utils/
+│           │   ├── logger.ts
+│           │   ├── backoff.ts
+│           │   └── hash.ts
+│           └── tests/
+│               └── email-worker.test.ts
+└── web/
+    ├── package.json
+    ├── package-lock.json
+    ├── tsconfig.json
+    ├── .gitignore
+    ├── README.md
+    ├── next.config.mjs
+    ├── next-env.d.ts
+    └── app/
+        ├── layout.tsx
+        ├── page.tsx
+        ├── campaigns/
+        │   ├── page.tsx
+        │   ├── [id]/
+        │   │   └── page.tsx
+        │   └── new/
+        │       └── page.tsx
+        ├── dashboard/
+        │   └── page.tsx
+        ├── dlq/
+        │   └── page.tsx
+        ├── login/
+        │   └── page.tsx
+        └── signup/
+            └── page.tsx
+    └── components/
+        ├── common/
+        │   ├── ErrorAlert.tsx
+        │   ├── Loading.tsx
+        │   └── Stepper.tsx
+        └── layout/
+            ├── AppShell.tsx
+            ├── Header.tsx
+            ├── Providers.tsx
+            └── Sidebar.tsx
+    └── lib/
+        ├── api.ts
+        ├── auth.tsx
+        ├── constants.ts
+        ├── theme.ts
+        └── hooks/
+            ├── useCampaigns.ts
+            └── useDashboard.ts

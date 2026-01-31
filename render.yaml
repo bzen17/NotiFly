@@ -1,0 +1,37 @@
+# Render service definitions for Notifly
+# Notes:
+# - Replace `repo` and `branch` values with your GitHub repository information when importing to Render.
+# - Secrets and environment variables should be set in the Render dashboard (or via `render.yaml` secrets).
+
+services:
+  # Public HTTP API - only backend that exposes an HTTP port
+  - type: web_service
+    name: notifly-producer
+    environment: node
+    region: oregon
+    plan: free
+    repo: 'https://github.com/bzen17/NotiFly'
+    branch: main
+    root: services/producer-service
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    autoDeploy: true
+
+    # Recommended: replace these placeholder values with actual secrets in Render dashboard.
+    # Do NOT commit real secrets into the repo. These placeholders serve as documentation
+    # of required environment variables for this service.
+    envVars:
+      - key: PG_CONNECTION
+        value: 'REPLACE_WITH_DATABASE_URL'
+      - key: MONGO_URI
+        value: 'REPLACE_WITH_MONGO_URI'
+      - key: REDIS_URL
+        value: 'REPLACE_WITH_REDIS_URL'
+      - key: JWT_SECRET
+        value: 'REPLACE_WITH_JWT_SECRET'
+      - key: NODE_ENV
+        value: 'production'
+      - key: SENDGRID_API_KEY
+        value: 'REPLACE_WITH_SENDGRID_API_KEY'
+      - key: SENDGRID_FROM
+        value: 'REPLACE_WITH_SENDGRID_FROM_EMAIL'
