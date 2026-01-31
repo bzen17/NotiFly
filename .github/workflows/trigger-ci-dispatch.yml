@@ -5,9 +5,6 @@ name: Trigger CI runs (manual)
 # Grant token permission to create workflow dispatch events
 permissions:
   contents: read
-  workflows: write
-# Manual helper workflow to dispatch the existing CI workflows (ci-web.yml, ci-backend.yml)
-# Use Actions UI -> Run workflow to trigger both CI workflows on a given ref.
 on:
   workflow_dispatch:
     inputs:
