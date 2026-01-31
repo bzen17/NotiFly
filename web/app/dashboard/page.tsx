@@ -104,7 +104,7 @@ export default function DashboardPage() {
                 },
                 { title: 'Retries', value: email ? email.retries : 0, caption: '' },
               ].map((m, idx) => (
-                <Grid key={m.title} item xs={12} sm={6} md={2.4}>
+                <Grid key={m.title} item xs={12} sm={6} md={2}>
                   <Card
                     sx={{
                       height: 120,
@@ -144,7 +144,7 @@ export default function DashboardPage() {
           );
         })()}
         {role === 'admin' && (
-          <Grid item xs={12} sm={6} md={2.4}>
+          <Grid item xs={12} sm={6} md={2}>
             <Card
               sx={{
                 height: 120,
