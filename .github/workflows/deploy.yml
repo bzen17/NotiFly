@@ -31,8 +31,8 @@ jobs:
               - 'services/**'
               - 'libs/**'
 
-  deploy-web:
-    name: Deploy Web to Vercel
+  deploy-frontend:
+    name: Deploy - Frontend
     needs: [filter, check-ci]
     if: needs.filter.outputs.web_changed == 'true'
     runs-on: ubuntu-latest
@@ -50,7 +50,7 @@ jobs:
           working-directory: web
 
   deploy-backend:
-    name: Deploy Backend (Render placeholder)
+    name: Deploy - Backend
     needs: [filter, check-ci]
     if: needs.filter.outputs.backend_changed == 'true'
     runs-on: ubuntu-latest
@@ -90,31 +90,51 @@ jobs:
         with:
           script: |
             const { owner, repo } = context.repo;
-            const sha = process.env.GITHUB_SHA || context.payload.workflow_run?.head_sha || context.sha;
+            const sha = context.payload.workflow_run?.head_sha || process.env.GITHUB_SHA || context.sha;
             const filterWeb = '${{ needs.filter.outputs.web_changed }}' === 'true';
             const filterBackend = '${{ needs.filter.outputs.backend_changed }}' === 'true';
 
-            async function waitForWorkflow(workflowFile) {
-              // Poll for the workflow run for this commit. Timeout after ~6 minutes.
-              for (let i = 0; i < 36; i++) {
-                const runs = await github.rest.actions.listWorkflowRuns({ owner, repo, workflow_id: workflowFile, per_page: 50 });
-                const run = runs.data.workflow_runs.find(r => r.head_sha === sha);
-                if (run) {
-                  if (run.status === 'completed') return run.conclusion === 'success';
-                  // still running
+            core.info(`Checking CI status for commit ${sha}. web_changed=${filterWeb} backend_changed=${filterBackend}`);
+
+            async function findRunForWorkflow(workflowIdentifiers) {
+              // workflowIdentifiers: array of workflow_id values (filename or workflow name)
+              for (let attempt = 0; attempt < 40; attempt++) {
+                for (const id of workflowIdentifiers) {
+                  const runs = await github.rest.actions.listWorkflowRuns({ owner, repo, workflow_id: id, per_page: 100 });
+                  const run = runs.data.workflow_runs.find(r => r.head_sha === sha);
+                  if (run) return run;
                 }
                 await new Promise(r => setTimeout(r, 10000));
               }
+              return null;
+            }
+
+            async function waitForWorkflowSuccess(identifiers) {
+              const run = await findRunForWorkflow(identifiers);
+              if (!run) {
+                core.warning(`No workflow run found for identifiers: ${identifiers.join(', ')} and commit ${sha}`);
+                return false;
+              }
+              core.info(`Found workflow run id=${run.id} name=${run.name} status=${run.status} conclusion=${run.conclusion}`);
+              // If already completed, check conclusion
+              if (run.status === 'completed') return run.conclusion === 'success';
+              // otherwise poll until completion
+              for (let i = 0; i < 30; i++) {
+                const r = await github.rest.actions.getWorkflowRun({ owner, repo, run_id: run.id });
+                if (r.data.status === 'completed') return r.data.conclusion === 'success';
+                await new Promise(r => setTimeout(r, 5000));
+              }
+              core.warning('Timed out waiting for workflow run to complete');
               return false;
             }
 
             let webOk = true;
             let backendOk = true;
             if (filterWeb) {
-              webOk = await waitForWorkflow('ci-web.yml');
+              webOk = await waitForWorkflowSuccess(['ci-web.yml', 'CI - Web']);
             }
             if (filterBackend) {
-              backendOk = await waitForWorkflow('ci-backend.yml');
+              backendOk = await waitForWorkflowSuccess(['ci-backend.yml', 'CI - Backend']);
             }
 
             if (!webOk || !backendOk) {
