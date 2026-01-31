@@ -49,15 +49,6 @@ export default function HomePage() {
                 width: '100%',
               }}
             >
-                <Box sx={{ mb: 2 }}>
-                  <Image
-                    src="/notifly-banner.svg"
-                    alt="Notifly banner"
-                    width={1200}
-                    height={300}
-                    style={{ width: '100%', height: 'auto', borderRadius: 8 }}
-                  />
-                </Box>
               <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 700 }}>
                 notifly — notifications, simplified
               </Typography>

@@ -6,7 +6,7 @@ name: Deploy
 # corresponding CI run for the current commit succeeded before deploying.
 on:
   workflow_run:
-    workflows: ["CI - Web", "CI - Backend"]
+    workflows: ['CI - Web', 'CI - Backend']
     types: [completed]
 
 jobs:
