@@ -56,3 +56,10 @@ Security
 See also
 
 - `web` for the dashboard, `services/router-service` and `services/worker-email` for routing and delivery processing.
+
+## Recent changes (2026-01-31)
+
+- A migration was added at `infra/sql/001-add-channel-to-deliveries.sql`. Apply it to Postgres to ensure the `deliveries` schema includes a `channel` column used by routing and workers.
+- Build note: production starts expect compiled artifacts in `dist/` — run `npm run build` before `npm run start` in production environments.
+
+For exact environment variables and example `.env` usage, see `src/config/env.ts` in this service.

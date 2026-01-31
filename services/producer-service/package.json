@@ -6,7 +6,6 @@
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "local": "NODE_ENV=development USE_CLOUD=false ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc -p .",
-    "prestart": "node dist/config/validateEnv.js",
     "start": "node dist/index.js"
   },
   "dependencies": {

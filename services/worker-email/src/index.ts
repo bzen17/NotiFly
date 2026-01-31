@@ -3,6 +3,7 @@ import { log } from './utils/logger';
 import runEmailConsumer, { stopConsumer } from './consumers/email.consumer';
 
 let running = true;
+let consumerPromise: Promise<void> | null = null;
 
 process.on('SIGINT', shutDown);
 process.on('SIGTERM', shutDown);
@@ -12,8 +13,16 @@ async function shutDown() {
   running = false;
   log.info('Shutting down, closing connections...');
   try {
-    // stop the consumer loop
+    // signal the consumer loop to stop
     stopConsumer();
+    // wait for the consumer loop to finish (it will exit after current BLOCK timeout or earlier)
+    if (consumerPromise) {
+      try {
+        await consumerPromise;
+      } catch (e) {
+        log.warn({ err: e }, 'consumer exited with error during shutdown');
+      }
+    }
   } catch (e) {
     log.warn({ err: e }, 'failed to stop consumer gracefully');
   }
@@ -27,7 +36,7 @@ async function shutDown() {
   process.exit(0);
 }
 
-runEmailConsumer()
+consumerPromise = runEmailConsumer()
   .then(() => {
     log.info('consumer stopped');
   })

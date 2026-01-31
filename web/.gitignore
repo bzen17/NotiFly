@@ -12,6 +12,9 @@ dist/
 .env.*
 .env.local
 
+# Ensure example env files are tracked
+!.env.example
+
 # Logs
 npm-debug.log*
 yarn-debug.log*

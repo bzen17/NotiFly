@@ -4,13 +4,23 @@ import { log } from '../utils/logger';
 import { processMessage } from '../services/consumer.service';
 
 let running = true;
+let redisClient: any = null;
 
-export function stopConsumer() {
+export async function stopConsumer() {
   running = false;
+  // Wake up the blocking XREADGROUP by adding a noop entry to the stream
+  try {
+    if (redisClient && typeof redisClient.xAdd === 'function') {
+      await redisClient.xAdd(STREAM, '*', { __shutdown: '1' });
+    }
+  } catch (err) {
+    log.warn({ err }, 'failed to write shutdown wakeup to stream');
+  }
 }
 
 export async function runEmailConsumer() {
   const redis = await getRedis();
+  redisClient = redis;
   const mongo = await getMongo();
   const pg = getPgPool();
 
@@ -21,6 +31,7 @@ export async function runEmailConsumer() {
         campaign_id text,
         tenant_id text,
         recipient text,
+        channel text,
         status text,
         code text,
         created_at timestamptz(6) DEFAULT clock_timestamp()::timestamptz(6),
@@ -74,6 +85,17 @@ export async function runEmailConsumer() {
         for (const message of s.messages) {
           const id = message.id;
           const msg = message.message;
+
+          // Ignore internal shutdown wakeups
+          if (msg && (msg.__shutdown === '1' || msg.__shutdown === 1)) {
+            try {
+              await redis.xAck(stream, group, id);
+            } catch (e) {
+              log.warn({ err: e }, 'failed to ack shutdown wakeup');
+            }
+            continue;
+          }
+
           try {
             await processMessage(redis, mongo, pg, [id, msg]);
             await redis.xAck(stream, group, id);
