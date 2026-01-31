@@ -14,6 +14,12 @@ on:
       - 'web/**'
       - 'tsconfig.base.json'
       - 'package.json'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to run the Web CI on'
+        required: false
+        default: 'main'
 
 jobs:
   web:

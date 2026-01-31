@@ -16,6 +16,12 @@ on:
       - 'libs/**'
       - 'tsconfig.base.json'
       - 'package.json'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to run the Backend CI on'
+        required: false
+        default: 'main'
 
 jobs:
   backend-ci:
