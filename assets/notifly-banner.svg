@@ -1,25 +1,35 @@
-<svg width="1280" height="640" viewBox="0 0 1280 640"
+<svg width="1280" height="420" viewBox="0 0 1280 420"
      xmlns="http://www.w3.org/2000/svg">
 
-  <rect width="1280" height="640" fill="#fff5f5"/>
+  <rect width="1280" height="420" fill="#fff5f5"/>
 
-  <text x="120" y="200"
-        font-size="88"
+  <!-- Title -->
+  <text x="120" y="150"
+        font-size="80"
         font-weight="700"
         fill="#2b2b2b"
         font-family="Inter, system-ui, sans-serif">
     notifly
   </text>
 
-  <text x="120" y="260"
-        font-size="36"
+  <!-- Subtitle -->
+  <text x="120" y="205"
+        font-size="34"
         fill="#555"
         font-family="Inter, system-ui, sans-serif">
     notifications, simplified
   </text>
 
+  <!-- Features -->
+  <text x="120" y="275"
+        font-size="26"
+        fill="#777"
+        font-family="Inter, system-ui, sans-serif">
+    Email • Streams • Workers • Dashboard
+  </text>
+
   <!-- Icon -->
-  <g transform="translate(900 160) scale(0.85)">
+  <g transform="translate(930 110) scale(0.75)">
     <rect width="256" height="256" rx="56" fill="#e25555"/>
     <path d="M128 64
              L176 128
@@ -30,10 +40,4 @@
           fill="#ffffff"/>
   </g>
 
-  <text x="120" y="360"
-        font-size="28"
-        fill="#777"
-        font-family="Inter, system-ui, sans-serif">
-    Email • Streams • Workers • Dashboard
-  </text>
 </svg>

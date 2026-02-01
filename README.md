@@ -1,5 +1,3 @@
-# NotiFly
-
 ![Notifly banner](./assets/notifly-banner.svg)
 
 NotiFly is a lightweight, modular notification platform designed for building, routing, and delivering notifications across multiple channels (email, SMS, push). This repository contains microservices, delivery adapters, and a Next.js admin UI to compose campaigns, route messages to providers, and process deliveries.

@@ -1,0 +1,44 @@
+<svg width="1280" height="640" viewBox="0 0 1280 640"
+     xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Background -->
+  <rect width="1280" height="640" fill="#fff5f5"/>
+
+  <!-- Title -->
+  <text x="120" y="280"
+        font-size="92"
+        font-weight="700"
+        fill="#2b2b2b"
+        font-family="Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif">
+    notifly
+  </text>
+
+  <!-- Subtitle -->
+  <text x="120" y="345"
+        font-size="38"
+        fill="#555"
+        font-family="Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif">
+    notifications, simplified
+  </text>
+
+  <!-- Features -->
+  <text x="120" y="415"
+        font-size="28"
+        fill="#777"
+        font-family="Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif">
+    Email • Streams • Workers • Dashboard
+  </text>
+
+  <!-- Icon -->
+  <g transform="translate(880 200)">
+    <rect width="280" height="280" rx="64" fill="#e25555"/>
+    <path d="M140 70
+             L190 140
+             L140 210
+             L140 170
+             L90 140
+             L140 110 Z"
+          fill="#ffffff"/>
+  </g>
+
+</svg>
