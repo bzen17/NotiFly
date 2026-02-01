@@ -16,7 +16,8 @@ export async function listCampaignsController(req: Request, res: Response) {
   try {
     const page = Number(req.query.page || 1);
     const limit = Number(req.query.limit || 20);
-    const filter: any = { ...(req.query || {}) };
+    const { page: _p, limit: _l, ...queryFilter } = req.query || {};
+    const filter: any = { ...(queryFilter as any) };
     // If requester is a tenant, scope campaigns to their tenantId
     const user = (req as any).user;
     if (user && user.role === 'tenant') {
