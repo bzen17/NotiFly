@@ -97,24 +97,25 @@ jobs:
 
             async function findRunForWorkflow(workflowIdentifiers) {
               // workflowIdentifiers: array of workflow_id values (filename or workflow name)
-              for (let attempt = 0; attempt < 40; attempt++) {
-                for (const id of workflowIdentifiers) {
-                  try {
-                    const runs = await github.rest.actions.listWorkflowRuns({ owner, repo, workflow_id: id, per_page: 100 });
-                    const run = runs.data.workflow_runs.find(r => r.head_sha === sha);
-                    if (run) return run;
-                  } catch (err) {
-                    // If the workflow identifier doesn't exist, the API returns 404.
-                    // Skip this identifier and continue trying other identifiers.
-                    if (err.status === 404) {
-                      core.warning(`Workflow identifier '${id}' not found; skipping.`);
-                      continue;
-                    }
-                    throw err;
+              // First, do a single immediate pass to see if any run exists for this commit.
+              for (const id of workflowIdentifiers) {
+                try {
+                  const runs = await github.rest.actions.listWorkflowRuns({ owner, repo, workflow_id: id, per_page: 100 });
+                  const run = runs.data.workflow_runs.find(r => r.head_sha === sha);
+                  if (run) return run;
+                } catch (err) {
+                  if (err.status === 404) {
+                    core.warning(`Workflow identifier '${id}' not found; skipping.`);
+                    continue;
                   }
+                  throw err;
                 }
-                await new Promise(r => setTimeout(r, 10000));
               }
+
+              // If no run was found at all, assume the workflow wasn't triggered for
+              // this commit (partial changes) and return null immediately instead of
+              // polling for a run that may never start.
+              core.info(`No workflow run found for identifiers: ${workflowIdentifiers.join(', ')} on commit ${sha}`);
               return null;
             }
 
