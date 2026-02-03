@@ -1,16 +1,9 @@
 name: CI - Backend
 
 on:
-  pull_request:
-    paths:
-      - 'services/**'
-      - 'libs/**'
   push:
     branches:
       - main
-    paths:
-      - 'services/**'
-      - 'libs/**'
   workflow_dispatch:
     inputs:
       deploy:
@@ -19,29 +12,10 @@ on:
         default: 'false'
 
 jobs:
-  determine-changes:
-    name: Determine changed areas
-    runs-on: ubuntu-latest
-    outputs:
-      backend-changed: ${{ steps.filter.outputs.backend }}
-      web-changed: ${{ steps.filter.outputs.web }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Determine changed paths
-        uses: dorny/paths-filter@v2
-        id: filter
-        with:
-          filters: |
-            backend: 'services/**|libs/**'
-            web: 'web/**'
-
   backend-tests:
     name: Backend tests
     runs-on: ubuntu-latest
-    needs: determine-changes
-    if: needs.determine-changes.outputs.backend-changed == 'true' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
