@@ -58,10 +58,10 @@ jobs:
         env:
           NODE_OPTIONS: --experimental-vm-modules
 
-      - name: Run web tests
+      - name: Run web tests (node ESM runner)
         run: |
           cd web
-          npm test
+          node --enable-source-maps --experimental-vm-modules ./node_modules/vitest/dist/cli.mjs --run
         env:
           NODE_OPTIONS: --experimental-vm-modules
 
