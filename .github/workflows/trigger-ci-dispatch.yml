@@ -24,7 +24,7 @@ jobs:
           script: |
             const { owner, repo } = context.repo;
             const ref = context.payload?.inputs?.ref || (context.ref ? context.ref.replace('refs/heads/', '') : 'main');
-            const workflows = ['ci-web.yml', 'ci-backend.yml'];
+            const workflows = ['frontend-ci.yml', 'backend-ci.yml'];
             for (const wf of workflows) {
               core.info(`Dispatching workflow ${wf} on ref ${ref}`);
               try {
