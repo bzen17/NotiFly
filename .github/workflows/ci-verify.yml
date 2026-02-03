@@ -43,6 +43,30 @@ jobs:
             const filterBackend = '${{ needs.determine-changes.outputs.backend-changed }}' === 'true';
 
             core.info(`Checking CI status for commit ${sha}. web_changed=${filterWeb} backend_changed=${filterBackend}`);
+            
+            // Determine ref to dispatch workflows on (branch name)
+            const ref = context.payload.pull_request ? context.payload.pull_request.head.ref : (context.ref || '').replace('refs/heads/', '');
+
+            // Dispatch CI workflows for the changed areas so they run under this commit/branch.
+            if (filterWeb) {
+              core.info(`Dispatching frontend workflow on ref=${ref}`);
+              try {
+                await github.rest.actions.createWorkflowDispatch({ owner, repo, workflow_id: 'frontend-ci.yml', ref });
+              } catch (err) {
+                core.warning(`Failed to dispatch frontend workflow: ${String(err)}`);
+              }
+            }
+            if (filterBackend) {
+              core.info(`Dispatching backend workflow on ref=${ref}`);
+              try {
+                await github.rest.actions.createWorkflowDispatch({ owner, repo, workflow_id: 'backend-ci.yml', ref });
+              } catch (err) {
+                core.warning(`Failed to dispatch backend workflow: ${String(err)}`);
+              }
+            }
+
+            // Small pause to allow dispatched workflow run to appear in listWorkflowRuns
+            if (filterWeb || filterBackend) await new Promise(r => setTimeout(r, 3000));
 
             async function findRunForWorkflow(workflowIdentifiers) {
               for (const id of workflowIdentifiers) {
