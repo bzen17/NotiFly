@@ -1,4 +1,4 @@
-name: Copilot PR Review (Personal Repo)
+name: Copilot PR Review
 
 on:
   pull_request:

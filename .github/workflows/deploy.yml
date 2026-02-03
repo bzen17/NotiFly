@@ -8,6 +8,9 @@ on:
   workflow_run:
     workflows: ['CI - Web', 'CI - Backend']
     types: [completed]
+  push:
+    branches:
+      - main
 
 jobs:
   filter:
