@@ -1,0 +1,7 @@
+version: 1
+review:
+  model: gpt-4o
+  focus:
+    - bugs
+    - security
+    - performance

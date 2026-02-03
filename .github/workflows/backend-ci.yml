@@ -1,0 +1,97 @@
+name: CI - Backend
+
+on:
+  pull_request:
+    paths:
+      - 'services/**'
+      - 'libs/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'services/**'
+      - 'libs/**'
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: 'Set to "true" to run the backend deploy job when manually triggered'
+        required: false
+        default: 'false'
+
+jobs:
+  determine-changes:
+    name: Determine changed areas
+    runs-on: ubuntu-latest
+    outputs:
+      backend-changed: ${{ steps.filter.outputs.backend }}
+      web-changed: ${{ steps.filter.outputs.web }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Determine changed paths
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            backend: 'services/**|libs/**'
+            web: 'web/**'
+
+  backend-tests:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    needs: determine-changes
+    if: needs.determine-changes.outputs.backend-changed == 'true' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install dependencies (root)
+        run: npm ci || npm install
+
+      - name: Build libs package
+        run: npm run build:libs
+
+      - name: Run services tests
+        run: |
+          set -e
+            echo "Running producer-service tests (coverage)"
+            npm test --prefix services/producer-service -- --coverage --coverageReporters="json-summary" || exit $?
+            echo "Running router-service tests (coverage)"
+            npm test --prefix services/router-service -- --coverage --coverageReporters="json-summary" || exit $?
+            echo "Running worker-email tests (coverage)"
+            npm test --prefix services/worker-email -- --coverage --coverageReporters="json-summary" || exit $?
+            echo "Running libs tests (coverage)"
+            npm test --prefix libs/delivery-adapters -- --coverage --coverageReporters="json-summary" || exit $?
+
+  deploy-backend:
+    name: Deploy - Backend
+    runs-on: ubuntu-latest
+    needs: backend-tests
+    # Only run deploy if on main branch (merge) OR manual dispatch with deploy=true
+    if: "(github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy == 'true')"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies (root)
+        run: npm ci || npm install
+
+      - name: Build backend packages
+        run: |
+          npm run build:libs
+          npm run build:services
+
+      - name: Backend deployment placeholder
+        run: |
+          echo "Backend deploy: replace this step with your cloud provider deployment (ssh/helm/terraform/etc)."
