@@ -52,7 +52,7 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies (root)
-        run: npm ci
+        run: npm ci || npm install
 
       - name: Run services tests
         run: |
@@ -99,7 +99,7 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies (root)
-        run: npm ci
+        run: npm ci || npm install
 
       - name: Build backend packages
         run: |

@@ -1,0 +1,187 @@
+name: Deploy (main)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Build all packages
+        run: |
+          npm run build:libs
+          npm run build:services
+
+      - name: Deployment placeholder
+        run: |
+          echo "Deploy stage — implement your cloud provider or Vercel deployment here."
+name: Deploy
+
+# Deploy runs after CI workflows complete. It uses path filters to deploy frontend (Vercel)
+# and backend (Render or placeholder) only when the relevant paths changed.
+# We trigger this workflow on completion of CI workflows and then verify that the
+# corresponding CI run for the current commit succeeded before deploying.
+on:
+  workflow_run:
+    workflows: ['CI - Web', 'CI - Backend']
+    types: [completed]
+
+jobs:
+  filter:
+    name: Determine changed areas
+    runs-on: ubuntu-latest
+    outputs:
+      web_changed: ${{ steps.filter.outputs.web }}
+      backend_changed: ${{ steps.filter.outputs.backend }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: dorny/paths-filter
+        id: filter
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            web:
+              - 'web/**'
+            backend:
+              - 'services/**'
+              - 'libs/**'
+
+  deploy-frontend:
+    name: Deploy - Frontend
+    needs: [filter, check-ci]
+    if: needs.filter.outputs.web_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to Vercel
+        # Requires repository secrets: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+
+  deploy-backend:
+    name: Deploy - Backend
+    needs: [filter, check-ci]
+    if: needs.filter.outputs.backend_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Trigger Render deploy (placeholder)
+        run: |
+          if [ -z "${RENDER_API_KEY}" ]; then
+            echo "No Render deployment configured. Set RENDER_API_KEY/RENDER_SERVICE_ID in repository secrets to enable."
+            exit 0
+          fi
+          echo "Triggering Render deploy for changed services..."
+          # Example: curl -X POST -H "Authorization: Bearer ${RENDER_API_KEY}" \
+          #   -H "Content-Type: application/json" \
+          #   -d '{"serviceId":"'"${RENDER_SERVICE_ID}"'"}' \
+          #   https://api.render.com/deploys
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+
+  check-ci:
+    name: Verify CI status for changed areas
+    needs: filter
+    runs-on: ubuntu-latest
+    outputs:
+      web_ok: ${{ steps.verify.outputs.web_ok }}
+      backend_ok: ${{ steps.verify.outputs.backend_ok }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify CI workflow runs
+        id: verify
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const sha = context.payload.workflow_run?.head_sha || process.env.GITHUB_SHA || context.sha;
+            const filterWeb = '${{ needs.filter.outputs.web_changed }}' === 'true';
+            const filterBackend = '${{ needs.filter.outputs.backend_changed }}' === 'true';
+
+            core.info(`Checking CI status for commit ${sha}. web_changed=${filterWeb} backend_changed=${filterBackend}`);
+
+            async function findRunForWorkflow(workflowIdentifiers) {
+              // workflowIdentifiers: array of workflow_id values (filename or workflow name)
+              // First, do a single immediate pass to see if any run exists for this commit.
+              for (const id of workflowIdentifiers) {
+                try {
+                  const runs = await github.rest.actions.listWorkflowRuns({ owner, repo, workflow_id: id, per_page: 100 });
+                  const run = runs.data.workflow_runs.find(r => r.head_sha === sha);
+                  if (run) return run;
+                } catch (err) {
+                  if (err.status === 404) {
+                    core.warning(`Workflow identifier '${id}' not found; skipping.`);
+                    continue;
+                  }
+                  throw err;
+                }
+              }
+
+              // If no run was found at all, assume the workflow wasn't triggered for
+              // this commit (partial changes) and return null immediately instead of
+              // polling for a run that may never start.
+              core.info(`No workflow run found for identifiers: ${workflowIdentifiers.join(', ')} on commit ${sha}`);
+              return null;
+            }
+
+            async function waitForWorkflowSuccess(identifiers) {
+              const run = await findRunForWorkflow(identifiers);
+              // If no workflow exists for these identifiers, treat it as not-required
+              // for this repository and continue (do not fail the deploy).
+              if (!run) {
+                core.warning(`No workflow found for identifiers: ${identifiers.join(', ')}. Assuming CI not configured for this area.`);
+                return true;
+              }
+              core.info(`Found workflow run id=${run.id} name=${run.name} status=${run.status} conclusion=${run.conclusion}`);
+              // If already completed, check conclusion
+              if (run.status === 'completed') return run.conclusion === 'success';
+              // otherwise poll until completion
+              for (let i = 0; i < 30; i++) {
+                const r = await github.rest.actions.getWorkflowRun({ owner, repo, run_id: run.id });
+                if (r.data.status === 'completed') return r.data.conclusion === 'success';
+                await new Promise(r => setTimeout(r, 5000));
+              }
+              core.warning('Timed out waiting for workflow run to complete');
+              return false;
+            }
+
+            let webOk = true;
+            let backendOk = true;
+            if (filterWeb) {
+              webOk = await waitForWorkflowSuccess(['ci-web.yml', 'CI - Web']);
+            }
+            if (filterBackend) {
+              backendOk = await waitForWorkflowSuccess(['ci-backend.yml', 'CI - Backend']);
+            }
+
+            if (!webOk || !backendOk) {
+              core.setFailed('One or more required CI workflows did not succeed for this commit. Aborting deploy.');
+            }
+
+            return { web_ok: webOk.toString(), backend_ok: backendOk.toString() };
