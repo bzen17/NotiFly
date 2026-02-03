@@ -49,7 +49,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '24'
 
       - name: Install dependencies (web)
         run: |
@@ -58,12 +58,10 @@ jobs:
         env:
           NODE_OPTIONS: --experimental-vm-modules
 
-      - name: Run web tests (npx vitest)
+      - name: Run web tests
         run: |
           cd web
-          npx --yes vitest --run
-        env:
-          NODE_OPTIONS: --experimental-vm-modules
+          npm test
 
   post-comment:
     name: Post Copilot comment (web)
