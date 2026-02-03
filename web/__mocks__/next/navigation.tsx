@@ -1,2 +1,4 @@
-export const useRouter = () => ({ push: jest.fn() });
+import { vi } from 'vitest';
+
+export const useRouter = () => ({ push: vi.fn() });
 export const usePathname = () => '/';

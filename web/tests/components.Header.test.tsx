@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 import Header from '../components/layout/Header';
 
@@ -18,7 +18,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 describe('Header', () => {
-  test('renders initials and logout triggers push', () => {
+  test('renders initials and avatar button is clickable', () => {
     const { container } = render(<Header />);
     expect(container).toBeTruthy();
     const avatarBtn = container.querySelector('button[aria-haspopup]');

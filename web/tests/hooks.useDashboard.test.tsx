@@ -15,8 +15,8 @@ describe('useDashboardMetrics', () => {
     vi.spyOn(apiMod.api, 'get').mockResolvedValue({ data: { visits: 10 } } as any);
 
     function Comp() {
-      const useRange = useDashboardMetrics();
-      const q = useRange();
+      const dashboardQuery = useDashboardMetrics();
+      const q = dashboardQuery();
       if (q.isLoading) return <div>loading</div>;
       return <div data-testid="metrics">{JSON.stringify(q.data)}</div>;
     }
@@ -27,6 +27,10 @@ describe('useDashboardMetrics', () => {
       </Wrapper>,
     );
 
-    await waitFor(() => expect(getByTestId('metrics')).toBeDefined());
+    await waitFor(() => {
+      const element = getByTestId('metrics');
+      expect(element).toBeDefined();
+      expect(JSON.parse(element.textContent || '{}')).toEqual({ visits: 10 });
+    });
   });
 });

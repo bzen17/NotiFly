@@ -26,6 +26,10 @@ describe('useCampaigns hook', () => {
       </Wrapper>,
     );
 
-    await waitFor(() => expect(getByTestId('ok')).toBeDefined());
+    await waitFor(() => {
+      const element = getByTestId('ok');
+      expect(element).toBeDefined();
+      expect(JSON.parse(element.textContent || '{}')).toEqual({ items: [] });
+    });
   });
 });
