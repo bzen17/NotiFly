@@ -1,0 +1,29 @@
+name: Copilot PR Review (Personal Repo)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  copilot-review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ask Copilot to review PR
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.DISPATCH_PAT }}
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: `@copilot review (See <attachments> above for file contents. You may not need to search or read the file again.)
+
+Please follow the repository Copilot instructions in /.github/copilot-instructions.md and apply high-confidence review guidance.`
+            });
