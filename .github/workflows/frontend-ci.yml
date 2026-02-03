@@ -61,7 +61,7 @@ jobs:
       - name: Run web tests (coverage)
         run: |
           set -e
-          npm test --prefix web -- --coverage --coverageReporters="json-summary" || exit $?
+          npm test --prefix web || exit $?
 
   deploy-web:
     name: Deploy - Frontend
