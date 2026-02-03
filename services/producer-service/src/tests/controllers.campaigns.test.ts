@@ -40,8 +40,8 @@ describe('Producer Service - Campaigns controllers', () => {
       requireRole: () => (req: any, res: any, next: any) => next(),
     }));
 
+    const { ERRORS } = await import('../constants');
     const err: any = new Error('validation_error');
-    const { ERRORS } = require('../constants');
     err.message = ERRORS.VALIDATION_ERROR;
     err.details = { field: 'name' };
     jest.doMock('../services/campaign.command.service', () => ({
