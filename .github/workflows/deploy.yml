@@ -34,7 +34,7 @@ jobs:
   deploy-frontend:
     name: Deploy - Frontend
     needs: [filter, check-ci]
-    if: needs.filter.outputs.web_changed == 'true'
+    if: needs.filter.outputs.web_changed == 'true' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -51,7 +51,7 @@ jobs:
   deploy-backend:
     name: Deploy - Backend
     needs: [filter, check-ci]
-    if: needs.filter.outputs.backend_changed == 'true'
+    if: needs.filter.outputs.backend_changed == 'true' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
