@@ -88,7 +88,7 @@ export default function SignupPage() {
               {error}
             </Typography>
           )}
-          <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
+          <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2, minHeight: 44 }}>
             Sign Up
           </Button>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>

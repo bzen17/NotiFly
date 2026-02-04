@@ -1,6 +1,7 @@
 'use client';
+
 import React from 'react';
-import { usePathname, useRouter, useSearchParams, useParams } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useCampaign, useCampaignDeliveries } from '../../../lib/hooks/useCampaigns';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
@@ -20,6 +21,11 @@ import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Stack from '@mui/material/Stack';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { STATUS, ERRORS } from '../../../lib/constants';
 
 export default function CampaignDetails() {
@@ -35,6 +41,7 @@ export default function CampaignDetails() {
   const [campaignRequeueLockedUntil, setCampaignRequeueLockedUntil] = React.useState<number | null>(
     null,
   );
+
   React.useEffect(() => {
     const t = setInterval(() => {
       setRequeueLocks((prev) => {
@@ -47,7 +54,6 @@ export default function CampaignDetails() {
         }
         return changed ? next : prev;
       });
-      // clear campaign-level lock when expired
       setCampaignRequeueLockedUntil((prev) => {
         if (!prev) return prev;
         return prev > Date.now() ? prev : null;
@@ -55,6 +61,7 @@ export default function CampaignDetails() {
     }, 1000);
     return () => clearInterval(t);
   }, []);
+
   const [snack, setSnack] = React.useState<{
     open: boolean;
     message?: string;
@@ -64,13 +71,24 @@ export default function CampaignDetails() {
   const [campaignLoading, setCampaignLoading] = React.useState(false);
 
   if (!id) return <ErrorAlert message="Invalid campaign id" />;
-
   if (isLoading) return <Loading />;
   if (isError || !data) return <ErrorAlert message="Campaign not found" />;
 
   const deliveries = Array.isArray(deliveriesQuery.data)
     ? deliveriesQuery.data
     : (deliveriesQuery.data?.items ?? []);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  const fmt = (v?: string | number | Date) => {
+    if (!v) return '';
+    try {
+      return new Date(v as any).toLocaleString();
+    } catch (e) {
+      return String(v);
+    }
+  };
 
   const columns: GridColDef[] = [
     { field: 'recipient', headerName: 'Recipient', flex: 1 },
@@ -82,8 +100,8 @@ export default function CampaignDetails() {
       renderCell: (params) => {
         const s = String(params.value || '').toLowerCase();
         let color: any = 'default';
-        if (s === STATUS.DELIVERED || s === STATUS.DELIVERED) color = 'success';
-        else if (s === STATUS.FAILED || s === STATUS.FAILED) color = 'error';
+        if (s === STATUS.DELIVERED) color = 'success';
+        else if (s === STATUS.FAILED) color = 'error';
         else if (s === STATUS.REQUEUED) color = 'warning';
         return <Chip label={String(params.value || '')} color={color} size="small" />;
       },
@@ -91,7 +109,7 @@ export default function CampaignDetails() {
     {
       field: 'actions',
       headerName: 'Actions',
-      width: 100,
+      width: 120,
       sortable: false,
       filterable: false,
       renderCell: (params) => {
@@ -101,10 +119,11 @@ export default function CampaignDetails() {
         const lockedTs =
           requeueLocks[rowId] ||
           (params.row.requeueLockedUntil ? new Date(params.row.requeueLockedUntil).getTime() : 0);
-        // Disable requeue when delivered, or when status is 'requeued' and lock window hasn't expired
         const status = (params.row.status || '') as string;
         const isLocked = !!(lockedTs && lockedTs > now);
-        let disabled = Boolean(isLoading || status?.toLowerCase() === STATUS.DELIVERED || isLocked);
+        const disabled = Boolean(
+          isLoading || status?.toLowerCase() === STATUS.DELIVERED || isLocked,
+        );
         let tooltip =
           status?.toLowerCase() === STATUS.DELIVERED ? 'Already delivered' : 'Requeue delivery';
         if (isLocked) {
@@ -160,81 +179,183 @@ export default function CampaignDetails() {
     },
     { field: 'attemptCount', headerName: 'Attempts', width: 100 },
     { field: 'lastError', headerName: 'Last Error', flex: 1 },
-    { field: 'updatedAt', headerName: 'Updated At', width: 180 },
+    {
+      field: 'updatedAt',
+      headerName: 'Updated At',
+      width: 180,
+      renderCell: (params) => <Typography variant="caption">{fmt(params.value)}</Typography>,
+    },
   ];
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-          <div>
+      <Box sx={{ mb: 2, width: '100%' }}>
+        {isMobile ? (
+          <>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                width: '100%',
+              }}
+            >
+              <Typography variant="h6">{data.name}</Typography>
+              <Chip label={data.status} color={data.status === 'FAILED' ? 'error' : 'primary'} />
+            </Box>
+
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1, width: '100%' }}>
+              {data.failed > 0 && (
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={async () => {
+                    try {
+                      setCampaignLoading(true);
+                      const res = await api.post(`/dlq/campaign/${id}/requeue`);
+                      setSnack({
+                        open: true,
+                        message: `Requeued ${res.data.result?.requeued ?? 0}`,
+                        severity: 'success',
+                      });
+                      const locks = res.data?.result?.locks;
+                      const lockedUntil = res.data?.result?.lockedUntil;
+                      if (locks && typeof locks === 'object') {
+                        const mapped: Record<string, number> = {};
+                        for (const k of Object.keys(locks)) {
+                          try {
+                            mapped[k] = new Date((locks as any)[k]).getTime();
+                          } catch (e) {
+                            // ignore
+                          }
+                        }
+                        setRequeueLocks((s) => ({ ...s, ...mapped }));
+                      }
+                      if (lockedUntil) {
+                        try {
+                          setCampaignRequeueLockedUntil(new Date(lockedUntil).getTime());
+                        } catch (e) {
+                          // ignore
+                        }
+                      } else if (!locks) {
+                        const DEFAULT_LOCK_MS = 10 * 60 * 1000;
+                        const until = Date.now() + DEFAULT_LOCK_MS;
+                        setRequeueLocks((s) => {
+                          const next = { ...s };
+                          for (const d of deliveries) {
+                            next[String(d.id)] = until;
+                          }
+                          return next;
+                        });
+                        setCampaignRequeueLockedUntil(until);
+                      }
+
+                      qc.invalidateQueries({ queryKey: ['campaign', id, 'deliveries'] });
+                      qc.invalidateQueries({ queryKey: ['campaign', id] });
+                    } catch (err) {
+                      setSnack({
+                        open: true,
+                        message: 'Failed to requeue campaign',
+                        severity: 'error',
+                      });
+                    } finally {
+                      setCampaignLoading(false);
+                    }
+                  }}
+                  disabled={
+                    campaignLoading ||
+                    (!!campaignRequeueLockedUntil && campaignRequeueLockedUntil > Date.now())
+                  }
+                  startIcon={campaignLoading ? <CircularProgress size={16} /> : <RefreshIcon />}
+                  sx={{ borderRadius: 999, textTransform: 'none', minHeight: 40 }}
+                >
+                  Requeue Failed
+                </Button>
+              )}
+            </Box>
+          </>
+        ) : (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              width: '100%',
+            }}
+          >
             <Typography variant="h6">{data.name}</Typography>
-          </div>
-          <Chip label={data.status} color={data.status === 'FAILED' ? 'error' : 'primary'} />
-        </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {data.failed > 0 && (
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={async () => {
+                    try {
+                      setCampaignLoading(true);
+                      const res = await api.post(`/dlq/campaign/${id}/requeue`);
+                      setSnack({
+                        open: true,
+                        message: `Requeued ${res.data.result?.requeued ?? 0}`,
+                        severity: 'success',
+                      });
+                      const locks = res.data?.result?.locks;
+                      const lockedUntil = res.data?.result?.lockedUntil;
+                      if (locks && typeof locks === 'object') {
+                        const mapped: Record<string, number> = {};
+                        for (const k of Object.keys(locks)) {
+                          try {
+                            mapped[k] = new Date((locks as any)[k]).getTime();
+                          } catch (e) {
+                            // ignore
+                          }
+                        }
+                        setRequeueLocks((s) => ({ ...s, ...mapped }));
+                      }
+                      if (lockedUntil) {
+                        try {
+                          setCampaignRequeueLockedUntil(new Date(lockedUntil).getTime());
+                        } catch (e) {
+                          // ignore
+                        }
+                      } else if (!locks) {
+                        const DEFAULT_LOCK_MS = 10 * 60 * 1000;
+                        const until = Date.now() + DEFAULT_LOCK_MS;
+                        setRequeueLocks((s) => {
+                          const next = { ...s };
+                          for (const d of deliveries) {
+                            next[String(d.id)] = until;
+                          }
+                          return next;
+                        });
+                        setCampaignRequeueLockedUntil(until);
+                      }
 
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={async () => {
-            try {
-              setCampaignLoading(true);
-              const res = await api.post(`/dlq/campaign/${id}/requeue`);
-              setSnack({
-                open: true,
-                message: `Requeued ${res.data.result?.requeued ?? 0}`,
-                severity: 'success',
-              });
-              // apply locks returned from server for each row and campaign-level lock
-              const locks = res.data?.result?.locks;
-              const lockedUntil = res.data?.result?.lockedUntil;
-              if (locks && typeof locks === 'object') {
-                const mapped: Record<string, number> = {};
-                for (const k of Object.keys(locks)) {
-                  try {
-                    mapped[k] = new Date((locks as any)[k]).getTime();
-                  } catch (e) {
-                    // ignore parse errors
+                      qc.invalidateQueries({ queryKey: ['campaign', id, 'deliveries'] });
+                      qc.invalidateQueries({ queryKey: ['campaign', id] });
+                    } catch (err) {
+                      setSnack({
+                        open: true,
+                        message: 'Failed to requeue campaign',
+                        severity: 'error',
+                      });
+                    } finally {
+                      setCampaignLoading(false);
+                    }
+                  }}
+                  disabled={
+                    campaignLoading ||
+                    (!!campaignRequeueLockedUntil && campaignRequeueLockedUntil > Date.now())
                   }
-                }
-                setRequeueLocks((s) => ({ ...s, ...mapped }));
-              }
-              if (lockedUntil) {
-                try {
-                  setCampaignRequeueLockedUntil(new Date(lockedUntil).getTime());
-                } catch (e) {
-                  // ignore
-                }
-              } else if (!locks) {
-                // fallback: disable all visible rows and campaign button for default lock window
-                const DEFAULT_LOCK_MS = 10 * 60 * 1000;
-                const until = Date.now() + DEFAULT_LOCK_MS;
-                setRequeueLocks((s) => {
-                  const next = { ...s };
-                  for (const d of deliveries) {
-                    next[String(d.id)] = until;
-                  }
-                  return next;
-                });
-                setCampaignRequeueLockedUntil(until);
-              }
-
-              qc.invalidateQueries({ queryKey: ['campaign', id, 'deliveries'] });
-              qc.invalidateQueries({ queryKey: ['campaign', id] });
-            } catch (err) {
-              setSnack({ open: true, message: 'Failed to requeue campaign', severity: 'error' });
-            } finally {
-              setCampaignLoading(false);
-            }
-          }}
-          disabled={
-            campaignLoading ||
-            (!!campaignRequeueLockedUntil && campaignRequeueLockedUntil > Date.now())
-          }
-          startIcon={campaignLoading ? <CircularProgress size={16} /> : <RefreshIcon />}
-        >
-          Requeue Failed
-        </Button>
+                  startIcon={campaignLoading ? <CircularProgress size={16} /> : <RefreshIcon />}
+                  sx={{ borderRadius: 999, textTransform: 'none', minHeight: 40 }}
+                >
+                  Requeue Failed
+                </Button>
+              )}
+              <Chip label={data.status} color={data.status === 'FAILED' ? 'error' : 'primary'} />
+            </Box>
+          </Box>
+        )}
       </Box>
 
       <Tabs value={tab} onChange={(_, v) => setTab(v)}>
@@ -245,7 +366,7 @@ export default function CampaignDetails() {
       {tab === 0 && (
         <Box sx={{ mt: 2 }}>
           <Typography>
-            <strong>Created:</strong> {data.createdAt ? new Date(data.createdAt).toISOString() : ''}
+            <strong>Created:</strong> {fmt(data.createdAt)}
           </Typography>
           <Typography>
             <strong>Total:</strong> {data.totalDeliveries}
@@ -260,19 +381,156 @@ export default function CampaignDetails() {
       )}
 
       {tab === 1 && (
-        <Box sx={{ mt: 2, height: 600 }}>
-          <DataGrid
-            rows={deliveries.map((d: any, idx: number) => ({
-              id: d.id ?? d._id ?? d.deliveryId ?? `delivery-${idx}`,
-              ...d,
-            }))}
-            columns={columns}
-            pageSizeOptions={[10, 25]}
-            sx={{
-              '& .MuiDataGrid-columnHeaders': { backgroundColor: '#eef2ff' },
-              '& .MuiDataGrid-cell': { alignItems: 'center' },
-            }}
-          />
+        <Box sx={{ mt: 2 }}>
+          {isMobile ? (
+            <Stack spacing={2}>
+              {deliveries.map((d: any, idx: number) => {
+                const rowId = d.id ?? d._id ?? d.deliveryId ?? `delivery-${idx}`;
+                const lockedTs =
+                  requeueLocks[rowId] ||
+                  (d.requeueLockedUntil ? new Date(d.requeueLockedUntil).getTime() : 0);
+                const now = Date.now();
+                const isLocked = !!(lockedTs && lockedTs > now);
+                const status = String(d.status || '').toLowerCase();
+                let chipColor: any = 'default';
+                if (status === STATUS.DELIVERED) chipColor = 'success';
+                else if (status === STATUS.FAILED) chipColor = 'error';
+                else if (status === STATUS.REQUEUED) chipColor = 'warning';
+
+                return (
+                  <Card key={rowId} variant="outlined" sx={{ borderRadius: 2 }}>
+                    <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                          <Typography
+                            noWrap
+                            sx={{ fontWeight: 600 }}
+                            title={d.recipient || d.to || d.email || rowId}
+                          >
+                            {d.recipient || d.to || d.email || rowId}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {d.channel}
+                          </Typography>
+                        </Box>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'flex-end',
+                            gap: 0.5,
+                          }}
+                        >
+                          <Chip label={d.status} color={chipColor} size="small" />
+                        </Box>
+                      </Box>
+
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: 1,
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            minWidth: 0,
+                            flex: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'flex-start',
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ overflow: 'hidden', textOverflow: 'ellipsis' }}
+                          >
+                            {d.lastError || ''}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                            {fmt(d.updatedAt)}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                            Attempts: {d.attemptCount ?? d.attempts ?? 0}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={
+                              loadingIds[rowId] ? <CircularProgress size={16} /> : <ReplayIcon />
+                            }
+                            onClick={async () => {
+                              try {
+                                setLoadingIds((s) => ({ ...s, [rowId]: true }));
+                                const res = await api.post(`/dlq/delivery-row/${rowId}/requeue`);
+                                const locked = res.data?.requeueLockedUntil || d.requeueLockedUntil;
+                                if (locked) {
+                                  setRequeueLocks((s) => ({
+                                    ...s,
+                                    [rowId]: new Date(locked).getTime(),
+                                  }));
+                                }
+                                setSnack({ open: true, message: 'Requeued', severity: 'success' });
+                                qc.invalidateQueries({
+                                  queryKey: ['campaign', id, 'deliveries', 1],
+                                });
+                                qc.invalidateQueries({ queryKey: ['campaign', id] });
+                              } catch (err: any) {
+                                const locked =
+                                  err?.response?.data?.requeueLockedUntil || d.requeueLockedUntil;
+                                if (locked)
+                                  setRequeueLocks((s) => ({
+                                    ...s,
+                                    [rowId]: new Date(locked).getTime(),
+                                  }));
+                                setSnack({
+                                  open: true,
+                                  message:
+                                    err?.response?.data?.error === ERRORS.LOCKED
+                                      ? 'Requeue locked'
+                                      : 'Failed to requeue',
+                                  severity: 'error',
+                                });
+                              } finally {
+                                setLoadingIds((s) => ({ ...s, [rowId]: false }));
+                              }
+                            }}
+                            disabled={
+                              loadingIds[rowId] ||
+                              isLocked ||
+                              String(d.status || '').toLowerCase() === STATUS.DELIVERED
+                            }
+                            sx={{ borderRadius: 999, textTransform: 'none', minHeight: 40 }}
+                          >
+                            Requeue
+                          </Button>
+                        </Box>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </Stack>
+          ) : (
+            <Box sx={{ mt: 2, height: { md: 600 } }}>
+              <DataGrid
+                rows={deliveries.map((d: any, idx: number) => ({
+                  id: d.id ?? d._id ?? d.deliveryId ?? `delivery-${idx}`,
+                  ...d,
+                }))}
+                columns={columns}
+                pageSizeOptions={[10, 25]}
+                sx={{
+                  '& .MuiDataGrid-columnHeaders': { backgroundColor: '#eef2ff' },
+                  '& .MuiDataGrid-cell': { alignItems: 'center' },
+                }}
+              />
+            </Box>
+          )}
         </Box>
       )}
 

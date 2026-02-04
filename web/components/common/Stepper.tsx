@@ -55,6 +55,14 @@ const ColorlibStepIconRoot = styled('div')<{
   ...theme.applyStyles('dark', {
     backgroundColor: theme.palette.grey[700],
   }),
+  [theme.breakpoints.down('sm')]: {
+    width: 36,
+    height: 36,
+  },
+  [theme.breakpoints.up('md')]: {
+    width: 50,
+    height: 50,
+  },
   variants: [
     {
       props: ({ ownerState }) => ownerState.active,
@@ -96,7 +104,7 @@ const steps = ['Campaign Info', 'Audience Setup', 'Create Content', 'Review & Tr
 
 export default function CustomizedSteppers(props: { activeStep: number }) {
   return (
-    <Box sx={{ maxWidth: 900, mx: 'auto', px: { xs: 1, md: 2 } }}>
+    <Box sx={{ width: '100%', maxWidth: { md: 900 }, mx: 'auto', px: { xs: 1, md: 2 } }}>
       <Stepper alternativeLabel activeStep={props.activeStep} connector={<ColorlibConnector />}>
         {steps.map((label) => (
           <Step key={label}>

@@ -3,7 +3,7 @@ name: CI - Verify
 on:
   pull_request:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   determine-changes:
@@ -43,7 +43,7 @@ jobs:
             const filterBackend = '${{ needs.determine-changes.outputs.backend-changed }}' === 'true';
 
             core.info(`Checking CI status for commit ${sha}. web_changed=${filterWeb} backend_changed=${filterBackend}`);
-            
+
             // Determine ref to dispatch workflows on (branch name)
             const ref = context.payload.pull_request ? context.payload.pull_request.head.ref : (context.ref || '').replace('refs/heads/', '');
 

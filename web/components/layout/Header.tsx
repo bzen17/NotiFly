@@ -11,6 +11,8 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -19,6 +21,8 @@ import { useAuth } from '../../lib/auth';
 export default function Header({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
   const router = useRouter();
   const { state, setUser } = useAuth();
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
   function getInitials() {
     const u = state?.user;
@@ -65,15 +69,20 @@ export default function Header({ onToggleSidebar }: { onToggleSidebar?: () => vo
         color: 'text.primary',
       }}
     >
-      <Toolbar>
-        <IconButton edge="start" sx={{ mr: 2 }} onClick={onToggleSidebar} aria-label="menu">
-          <MenuIcon />
-        </IconButton>
+      <Toolbar sx={{ minHeight: { xs: 56, md: 64 } }}>
+        {!isDesktop && (
+          <IconButton edge="start" sx={{ mr: 2 }} onClick={onToggleSidebar} aria-label="menu">
+            <MenuIcon />
+          </IconButton>
+        )}
         <Box sx={{ flex: 1 }}>
           <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}>
               <Image src="/notifly-icon.svg" alt="Notifly" width={32} height={32} />
-              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              <Typography
+                variant="h6"
+                sx={{ fontWeight: 700, fontSize: { xs: '1rem', md: '1.125rem' } }}
+              >
                 notifly
               </Typography>
             </Box>
