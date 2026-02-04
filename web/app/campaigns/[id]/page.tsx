@@ -70,6 +70,9 @@ export default function CampaignDetails() {
   const [loadingIds, setLoadingIds] = React.useState<Record<string, boolean>>({});
   const [campaignLoading, setCampaignLoading] = React.useState(false);
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   if (!id) return <ErrorAlert message="Invalid campaign id" />;
   if (isLoading) return <Loading />;
   if (isError || !data) return <ErrorAlert message="Campaign not found" />;
@@ -77,9 +80,6 @@ export default function CampaignDetails() {
   const deliveries = Array.isArray(deliveriesQuery.data)
     ? deliveriesQuery.data
     : (deliveriesQuery.data?.items ?? []);
-
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const fmt = (v?: string | number | Date) => {
     if (!v) return '';

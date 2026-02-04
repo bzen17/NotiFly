@@ -150,13 +150,13 @@ export default function HomePage() {
                 Upcoming
               </Typography>
 
-              <Stack direction="row" spacing={1} flexWrap="wrap">
-                <Chip label="In-app notifications" color="secondary" sx={{ mr: 1, mb: 1 }} />
-                <Chip label="Templates Marketplace" color="secondary" sx={{ mr: 1, mb: 1 }} />
-                <Chip label="A/B Testing" color="secondary" sx={{ mr: 1, mb: 1 }} />
-                <Chip label="Advanced Analytics" color="secondary" sx={{ mr: 1, mb: 1 }} />
-                <Chip label="Multi-channel Orchestration" color="secondary" sx={{ mr: 1, mb: 1 }} />
-              </Stack>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                <Chip label="In-app notifications" color="secondary" />
+                <Chip label="Templates Marketplace" color="secondary" />
+                <Chip label="A/B Testing" color="secondary" />
+                <Chip label="Advanced Analytics" color="secondary" />
+                <Chip label="Multi-channel Orchestration" color="secondary" />
+              </Box>
 
               <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
                 We're focused on expanding delivery reliability, richer insights, and workflow

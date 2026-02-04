@@ -38,9 +38,12 @@ export default function DashboardPage() {
   const useRangeDashboard = useDashboardMetrics();
   const { data, isLoading, isError } = useRangeDashboard(range);
 
+  // Call auth hook unconditionally before any early returns to keep hook order stable
+  const { state } = useAuth();
+  const role = state?.user?.role;
+
   if (isLoading) return <Loading />;
   if (isError) return <ErrorAlert message="Failed to load dashboard metrics" />;
-
   const {
     totalDeliveries,
     successCount,
@@ -52,8 +55,7 @@ export default function DashboardPage() {
     perChannel,
     timeSeries,
   } = data ?? {};
-  const { state } = useAuth();
-  const role = state?.user?.role;
+  
 
   return (
     <>
