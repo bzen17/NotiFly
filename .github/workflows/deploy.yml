@@ -5,9 +5,6 @@ name: Deploy
 # We trigger this workflow on completion of CI workflows and then verify that the
 # corresponding CI run for the current commit succeeded before deploying.
 on:
-  workflow_run:
-    workflows: ['CI - Web', 'CI - Backend']
-    types: [completed]
   push:
     branches:
       - main
