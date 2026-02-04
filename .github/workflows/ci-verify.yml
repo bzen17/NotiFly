@@ -1,9 +1,13 @@
 name: CI - Verify
 
+permissions:
+  contents: read
+  workflows: write
+
 on:
   pull_request:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   determine-changes:
@@ -43,7 +47,6 @@ jobs:
             const filterBackend = '${{ needs.determine-changes.outputs.backend-changed }}' === 'true';
 
             core.info(`Checking CI status for commit ${sha}. web_changed=${filterWeb} backend_changed=${filterBackend}`);
-            
             // Determine ref to dispatch workflows on (branch name)
             const ref = context.payload.pull_request ? context.payload.pull_request.head.ref : (context.ref || '').replace('refs/heads/', '');
 
@@ -103,7 +106,7 @@ jobs:
             }
 
             let ok = true;
-            if (filterWeb) ok = ok && await waitForWorkflowSuccess(['ci-web.yml','CI - Web']);
-            if (filterBackend) ok = ok && await waitForWorkflowSuccess(['ci-backend.yml','CI - Backend']);
+            if (filterWeb) ok = ok && await waitForWorkflowSuccess(['frontend-ci.yml','CI - Web']);
+            if (filterBackend) ok = ok && await waitForWorkflowSuccess(['backend-ci.yml','CI - Backend']);
 
             if (!ok) core.setFailed('Required CI workflow(s) did not succeed for this commit.');

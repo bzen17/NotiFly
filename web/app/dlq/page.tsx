@@ -144,7 +144,7 @@ export default function DlqPage() {
         DLQ
       </Typography>
 
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -249,6 +249,7 @@ export default function DlqPage() {
                                               setConfirmOpen(true);
                                             }}
                                             disabled={isLocked}
+                                            sx={{ minHeight: 40 }}
                                           >
                                             Requeue
                                           </Button>
@@ -276,7 +277,9 @@ export default function DlqPage() {
           {selected?.type === 'campaign' ? 'Requeue campaign?' : 'Requeue delivery?'}
         </DialogTitle>
         <DialogActions>
-          <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
+          <Button onClick={() => setConfirmOpen(false)} sx={{ minHeight: 40 }}>
+            Cancel
+          </Button>
           <Button
             onClick={async () => {
               if (!selected) return setConfirmOpen(false);
@@ -293,6 +296,7 @@ export default function DlqPage() {
               }
             }}
             autoFocus
+            sx={{ minHeight: 40 }}
           >
             Requeue
           </Button>

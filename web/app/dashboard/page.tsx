@@ -115,7 +115,8 @@ export default function DashboardPage() {
                   <Card
                     sx={{
                       height: 120,
-                      width: 180,
+                      width: '100%',
+                      maxWidth: 320,
                       display: 'flex',
                       alignItems: 'center',
                       boxShadow: CARD_SHADOW,
@@ -161,7 +162,8 @@ export default function DashboardPage() {
             <Card
               sx={{
                 height: 120,
-                width: 180,
+                width: '100%',
+                maxWidth: 320,
                 display: 'flex',
                 alignItems: 'center',
                 boxShadow: CARD_SHADOW,
@@ -177,7 +179,7 @@ export default function DashboardPage() {
                   borderBottomLeftRadius: 8,
                 }}
               />
-              <CardContent sx={{ py: 1, pl: 2 }}>
+              <CardContent sx={{ py: 1, pl: 2, pr: 1 }}>
                 <Typography variant="caption" color="text.secondary">
                   DLQ Entries (Admin)
                 </Typography>
@@ -201,7 +203,7 @@ export default function DashboardPage() {
       >
         <Box sx={{ flex: 1 }}>
           <Card sx={{ boxShadow: CARD_SHADOW, borderRadius: 2, height: '100%' }}>
-            <CardContent sx={{ height: 420, px: 0 }}>
+            <CardContent sx={{ height: { xs: 300, md: 420 }, px: 0 }}>
               <Typography variant="caption" color="text.secondary" gutterBottom sx={{ px: 4 }}>
                 Sent per Channel (stacked)
               </Typography>
@@ -254,7 +256,7 @@ export default function DashboardPage() {
 
         <Box sx={{ flex: 1 }}>
           <Card sx={{ boxShadow: CARD_SHADOW, borderRadius: 2, height: '100%' }}>
-            <CardContent sx={{ height: 420, px: 0 }}>
+            <CardContent sx={{ height: { xs: 300, md: 420 }, px: 0 }}>
               <Typography variant="caption" color="text.secondary" gutterBottom sx={{ px: 4 }}>
                 Total Deliveries Over Time
               </Typography>

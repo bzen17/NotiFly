@@ -86,7 +86,7 @@ export default function LoginPage() {
               {error}
             </Typography>
           )}
-          <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
+          <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2, minHeight: 44 }}>
             Sign In
           </Button>
           <Link href="/signup">Don't have an account? Sign up</Link>

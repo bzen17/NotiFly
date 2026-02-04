@@ -1,4 +1,4 @@
-# Manual helper workflow to dispatch the existing CI workflows (ci-web.yml, ci-backend.yml)
+# Manual helper workflow to dispatch the existing CI workflows (frontend-ci.yml, backend-ci.yml)
 # Use Actions UI -> Run workflow to trigger both CI workflows on a given ref.
 name: Trigger CI runs (manual)
 

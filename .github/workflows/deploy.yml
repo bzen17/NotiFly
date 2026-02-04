@@ -5,9 +5,6 @@ name: Deploy
 # We trigger this workflow on completion of CI workflows and then verify that the
 # corresponding CI run for the current commit succeeded before deploying.
 on:
-  workflow_run:
-    workflows: ['CI - Web', 'CI - Backend']
-    types: [completed]
   push:
     branches:
       - main
@@ -37,7 +34,7 @@ jobs:
   deploy-frontend:
     name: Deploy - Frontend
     needs: [filter, check-ci]
-    if: needs.filter.outputs.web_changed == 'true'
+    if: needs.filter.outputs.web_changed == 'true' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -54,7 +51,7 @@ jobs:
   deploy-backend:
     name: Deploy - Backend
     needs: [filter, check-ci]
-    if: needs.filter.outputs.backend_changed == 'true'
+    if: needs.filter.outputs.backend_changed == 'true' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -146,10 +143,10 @@ jobs:
             let webOk = true;
             let backendOk = true;
             if (filterWeb) {
-              webOk = await waitForWorkflowSuccess(['ci-web.yml', 'CI - Web']);
+              webOk = await waitForWorkflowSuccess(['frontend-ci.yml', 'CI - Web']);
             }
             if (filterBackend) {
-              backendOk = await waitForWorkflowSuccess(['ci-backend.yml', 'CI - Backend']);
+              backendOk = await waitForWorkflowSuccess(['backend-ci.yml', 'CI - Backend']);
             }
 
             if (!webOk || !backendOk) {
