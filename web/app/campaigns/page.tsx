@@ -58,7 +58,7 @@ export default function CampaignsPage() {
 
       {isMobile ? (
         <Stack spacing={2}>
-          {rows.map((r) => (
+          {rows.map((r: any) => (
             <Card
               key={r.id}
               variant="outlined"
