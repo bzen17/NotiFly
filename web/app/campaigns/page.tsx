@@ -19,6 +19,9 @@ export default function CampaignsPage() {
   const { data, isLoading, isError } = useCampaigns();
   const router = useRouter();
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   if (isLoading) return <Loading />;
   if (isError) return <ErrorAlert message="Failed to load campaigns" />;
 
@@ -26,19 +29,26 @@ export default function CampaignsPage() {
   const rows = list.map((c: any, idx: number) => ({
     id: c.campaignId,
     name: c.name,
-    createdAt: c.createdAt ? new Date(c.createdAt).toISOString() : '',
+    createdAt: c.createdAt ? new Date(c.createdAt).getTime() : null,
     status: c.status,
     totalDeliveries: c.totalDeliveries,
     success: c.success,
     failed: c.failed,
   }));
 
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const columns: GridColDef[] = [
     { field: 'name', headerName: 'Campaign Name', flex: 1 },
-    { field: 'createdAt', headerName: 'Created At', width: 200 },
+    {
+      field: 'createdAt',
+      headerName: 'Created At',
+      width: 200,
+      renderCell: (params) => (
+        <Typography variant="caption">
+          {params.value ? new Date(params.value as number).toLocaleString() : ''}
+        </Typography>
+      ),
+    },
     { field: 'status', headerName: 'Status', width: 140 },
     { field: 'totalDeliveries', headerName: 'Total', width: 100 },
     { field: 'success', headerName: 'Success', width: 100 },

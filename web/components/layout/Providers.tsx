@@ -1,5 +1,7 @@
 'use client';
 import React from 'react';
+import { CacheProvider } from '@emotion/react';
+import createEmotionCache from '../../lib/createEmotionCache';
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -15,12 +17,17 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   const isAuthRoute = pathname === '/login' || pathname === '/signup';
 
+  // create a client-side emotion cache that will insert styles at the insertion point
+  const cache = React.useMemo(() => createEmotionCache(), []);
+
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>{isAuthRoute ? children : <AppShell>{children}</AppShell>}</AuthProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <CacheProvider value={cache}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>{isAuthRoute ? children : <AppShell>{children}</AppShell>}</AuthProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </CacheProvider>
   );
 }

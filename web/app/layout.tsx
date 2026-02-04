@@ -13,6 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/favicon.svg" />
+        <meta name="emotion-insertion-point" content="emotion-insertion-point" />
       </head>
       <body>
         <Providers>{children}</Providers>
