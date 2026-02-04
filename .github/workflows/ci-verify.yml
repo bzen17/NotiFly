@@ -102,7 +102,7 @@ jobs:
             }
 
             let ok = true;
-            if (filterWeb) ok = ok && await waitForWorkflowSuccess(['ci-web.yml','CI - Web']);
-            if (filterBackend) ok = ok && await waitForWorkflowSuccess(['ci-backend.yml','CI - Backend']);
+            if (filterWeb) ok = ok && await waitForWorkflowSuccess(['frontend-ci.yml','CI - Web']);
+            if (filterBackend) ok = ok && await waitForWorkflowSuccess(['backend-ci.yml','CI - Backend']);
 
             if (!ok) core.setFailed('Required CI workflow(s) did not succeed for this commit.');

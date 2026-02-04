@@ -146,10 +146,10 @@ jobs:
             let webOk = true;
             let backendOk = true;
             if (filterWeb) {
-              webOk = await waitForWorkflowSuccess(['ci-web.yml', 'CI - Web']);
+              webOk = await waitForWorkflowSuccess(['frontend-ci.yml', 'CI - Web']);
             }
             if (filterBackend) {
-              backendOk = await waitForWorkflowSuccess(['ci-backend.yml', 'CI - Backend']);
+              backendOk = await waitForWorkflowSuccess(['backend-ci.yml', 'CI - Backend']);
             }
 
             if (!webOk || !backendOk) {
