@@ -9,6 +9,7 @@ import { theme } from '../../lib/theme';
 import AppShell from './AppShell';
 import { AuthProvider } from '../../lib/auth';
 import { usePathname } from 'next/navigation';
+import FloatingDemoButton from '../ui/FloatingDemoButton';
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         <CssBaseline />
         <QueryClientProvider client={queryClient}>
           <AuthProvider>{isAuthRoute ? children : <AppShell>{children}</AppShell>}</AuthProvider>
+          <FloatingDemoButton />
         </QueryClientProvider>
       </ThemeProvider>
     </CacheProvider>

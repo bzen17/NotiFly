@@ -44,9 +44,11 @@ export default function CampaignsPage() {
       headerName: 'Created At',
       width: 200,
       renderCell: (params) => (
-        <Typography variant="caption">
-          {params.value ? new Date(params.value as number).toLocaleString() : ''}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+          <Typography variant="body2" color="text.secondary">
+            {params.value ? new Date(params.value as number).toLocaleString() : ''}
+          </Typography>
+        </Box>
       ),
     },
     { field: 'status', headerName: 'Status', width: 140 },
@@ -80,8 +82,8 @@ export default function CampaignsPage() {
                   <Typography noWrap variant="subtitle1" sx={{ fontWeight: 600 }} title={r.name}>
                     {r.name}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {r.createdAt}
+                  <Typography variant="body2" color="text.secondary">
+                    {r.createdAt ? new Date(r.createdAt as number).toLocaleString() : ''}
                   </Typography>
                 </Box>
                 <Box
@@ -89,6 +91,7 @@ export default function CampaignsPage() {
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'flex-end',
+                    justifyContent: 'center',
                     gap: 0.5,
                   }}
                 >
@@ -103,12 +106,13 @@ export default function CampaignsPage() {
         </Stack>
       ) : (
         <div style={{ height: '60vh', maxHeight: 800, width: '100%' }}>
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            pageSizeOptions={[10, 25, 50]}
-            onRowClick={(params) => router.push(`/campaigns/${params.id}`)}
-          />
+            <DataGrid
+              rows={rows}
+              columns={columns}
+              pageSizeOptions={[10, 25, 50]}
+              onRowClick={(params) => router.push(`/campaigns/${params.id}`)}
+              rowHeight={64}
+            />
         </div>
       )}
     </Box>
