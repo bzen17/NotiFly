@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getDemoSession } from './demoAuth';
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -15,6 +16,14 @@ api.interceptors.request.use((config) => {
       if (token) {
         config.headers = config.headers || {};
         (config.headers as any).Authorization = `Bearer ${token}`;
+      } else {
+        // if demo session active, attach demo headers so backend accepts the request in dev
+        const demo = getDemoSession();
+        if (demo) {
+          config.headers = config.headers || {};
+          (config.headers as any)['X-Demo-Auth'] = '1';
+          (config.headers as any).Authorization = `Bearer demo-${demo.user.role}`;
+        }
       }
     }
   } catch (e) {}

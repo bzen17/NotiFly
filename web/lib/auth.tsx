@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { getDemoSession } from './demoAuth';
 
 type AuthState = { user: any | null; ready: boolean };
 
@@ -86,12 +87,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setStoredTokens(null, null);
         }
       }
+      // check demo session if no real tokens
+      const demo = getDemoSession();
+      if (demo && mounted) {
+        setState({ user: demo.user, ready: true });
+        return;
+      }
       if (mounted) setState({ user: null, ready: true });
     }
     init();
     return () => {
       mounted = false;
     };
+  }, []);
+
+  // listen for demo toggles
+  React.useEffect(() => {
+    function handler() {
+      const demo = getDemoSession();
+      if (demo) setState({ user: demo.user, ready: true });
+      else setState((s) => ({ ...s, user: null }));
+    }
+    window.addEventListener('demoAuthChanged', handler as EventListener);
+    return () => window.removeEventListener('demoAuthChanged', handler as EventListener);
   }, []);
 
   React.useEffect(() => {
@@ -109,7 +127,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function fetchWithAuth(input: RequestInfo, init?: RequestInit) {
     const { accessToken, refreshToken } = getStoredTokens();
     const headers = new Headers(init?.headers || {});
-    if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
+    // prefer real access token
+    if (accessToken) {
+      headers.set('Authorization', `Bearer ${accessToken}`);
+    } else {
+      // if demo session active, mark request so backend can accept demo auth in dev
+      try {
+        const demo = getDemoSession();
+        if (demo) {
+          headers.set('X-Demo-Auth', '1');
+          headers.set('Authorization', `Bearer demo-${demo.user.role}`);
+        }
+      } catch (e) {}
+    }
+
     const res = await fetch(input, { ...init, headers });
     if (res.status !== 401) return res;
     // try refresh
