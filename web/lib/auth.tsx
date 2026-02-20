@@ -51,7 +51,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async function init() {
       const { accessToken, refreshToken } = getStoredTokens();
       if (accessToken) {
-        // naive decode for user email/role
         try {
           const payload = JSON.parse(atob(accessToken.split('.')[1]));
           if (mounted)
@@ -87,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setStoredTokens(null, null);
         }
       }
-      // check demo session if no real tokens
+
       const demo = getDemoSession();
       if (demo && mounted) {
         setState({ user: demo.user, ready: true });
@@ -101,7 +100,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // listen for demo toggles
   React.useEffect(() => {
     function handler() {
       const demo = getDemoSession();
@@ -127,11 +125,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function fetchWithAuth(input: RequestInfo, init?: RequestInit) {
     const { accessToken, refreshToken } = getStoredTokens();
     const headers = new Headers(init?.headers || {});
-    // prefer real access token
+
     if (accessToken) {
       headers.set('Authorization', `Bearer ${accessToken}`);
     } else {
-      // if demo session active, mark request so backend can accept demo auth in dev
       try {
         const demo = getDemoSession();
         if (demo) {
@@ -143,7 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const res = await fetch(input, { ...init, headers });
     if (res.status !== 401) return res;
-    // try refresh
+
     if (!refreshToken) return res;
     try {
       const json = await doRefresh(refreshToken);

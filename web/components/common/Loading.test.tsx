@@ -5,7 +5,7 @@ import Loading from './Loading';
 describe('Loading component', () => {
   it('renders a progress element', () => {
     render(<Loading />);
-    // CircularProgress renders an SVG role='progressbar'
+
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 });

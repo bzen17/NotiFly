@@ -36,7 +36,6 @@ export default function CampaignsPage() {
     failed: c.failed,
   }));
 
-
   const columns: GridColDef[] = [
     { field: 'name', headerName: 'Campaign Name', flex: 1 },
     {
@@ -106,13 +105,13 @@ export default function CampaignsPage() {
         </Stack>
       ) : (
         <div style={{ height: '60vh', maxHeight: 800, width: '100%' }}>
-            <DataGrid
-              rows={rows}
-              columns={columns}
-              pageSizeOptions={[10, 25, 50]}
-              onRowClick={(params) => router.push(`/campaigns/${params.id}`)}
-              rowHeight={64}
-            />
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            pageSizeOptions={[10, 25, 50]}
+            onRowClick={(params) => router.push(`/campaigns/${params.id}`)}
+            rowHeight={64}
+          />
         </div>
       )}
     </Box>

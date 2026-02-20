@@ -39,7 +39,6 @@ export default function Sidebar({
 
   const width = collapsed ? collapsedWidth : drawerWidth;
 
-  // Shared paper styles
   const paperSx = (t: any) => ({
     width,
     boxSizing: 'border-box',
@@ -49,7 +48,6 @@ export default function Sidebar({
   });
 
   if (!isDesktop) {
-    // mobile: temporary drawer
     return (
       <Drawer
         variant="temporary"
@@ -83,7 +81,6 @@ export default function Sidebar({
     );
   }
 
-  // desktop: permanent drawer
   return (
     <Drawer
       variant="permanent"

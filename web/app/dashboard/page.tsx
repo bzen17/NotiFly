@@ -9,6 +9,7 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
+import CircularProgress from '@mui/material/CircularProgress';
 import { useDashboardMetrics } from '../../lib/hooks/useDashboard';
 import Loading from '../../components/common/Loading';
 import ErrorAlert from '../../components/common/ErrorAlert';
@@ -27,7 +28,6 @@ import {
   CartesianGrid,
 } from 'recharts';
 
-// Color tokens used in charts and accents
 const SUCCESS_COLOR = '#4caf50';
 const FAILED_COLOR = '#f44336';
 const ACCENT_BG = '#f5f7fb';
@@ -36,13 +36,12 @@ const CARD_SHADOW = '0 1px 6px rgba(16,24,40,0.08)';
 export default function DashboardPage() {
   const [range, setRange] = useState<string>('24h');
   const useRangeDashboard = useDashboardMetrics();
-  const { data, isLoading, isError } = useRangeDashboard(range);
+  const { data, isLoading, isPending, isFetching, isError } = useRangeDashboard(range);
 
-  // Call auth hook unconditionally before any early returns to keep hook order stable
   const { state } = useAuth();
   const role = state?.user?.role;
 
-  if (isLoading) return <Loading />;
+  if (isPending) return <Loading />;
   if (isError) return <ErrorAlert message="Failed to load dashboard metrics" />;
   const {
     totalDeliveries,
@@ -55,30 +54,32 @@ export default function DashboardPage() {
     perChannel,
     timeSeries,
   } = data ?? {};
-  
 
   return (
     <>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h6">Dashboard</Typography>
-        <FormControl variant="standard" size="small">
-          <InputLabel id="range-select-label">Range</InputLabel>
-          <Select
-            labelId="range-select-label"
-            value={range}
-            onChange={(e) => setRange(e.target.value as string)}
-            label="Range"
-            sx={{ minWidth: 160 }}
-          >
-            <MenuItem value="24h">Last 24 hours</MenuItem>
-            <MenuItem value="7d">Last 7 days</MenuItem>
-            <MenuItem value="1m">Last 30 days</MenuItem>
-          </Select>
-        </FormControl>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          {isFetching && !isLoading && <CircularProgress size={18} thickness={5} />}
+          <FormControl variant="standard" size="small">
+            <InputLabel id="range-select-label">Range</InputLabel>
+            <Select
+              labelId="range-select-label"
+              value={range}
+              onChange={(e) => setRange(e.target.value as string)}
+              label="Range"
+              sx={{ minWidth: 160 }}
+            >
+              <MenuItem value="24h">Last 24 hours</MenuItem>
+              <MenuItem value="7d">Last 7 days</MenuItem>
+              <MenuItem value="1m">Last 30 days</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
       </Box>
 
       <Grid container spacing={2} sx={{ mb: 1 }}>
-        {/** Metric cards row - compact and consistent */}
+        {}
         {(() => {
           const email =
             (perChannel || []).find((p: any) => (p.channel || '').toLowerCase() === 'email') ||

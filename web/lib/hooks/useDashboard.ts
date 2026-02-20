@@ -1,5 +1,5 @@
 'use client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { api } from '../api';
 
 export function useDashboardMetrics() {
@@ -10,6 +10,7 @@ export function useDashboardMetrics() {
         const { data } = await api.get('/dashboard/metrics', { params: { range } });
         return data;
       },
+      placeholderData: keepPreviousData,
     });
   };
 }

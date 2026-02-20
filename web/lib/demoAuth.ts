@@ -1,6 +1,5 @@
-// client-side demo auth helpers
 export type DemoSession = {
-  expiresAt: number; // epoch ms
+  expiresAt: number;
   user: { id: string; email: string; role: string; tenantId?: string };
 };
 
@@ -15,7 +14,6 @@ function scheduleExpiration(expiresAt: number) {
   }
   const ms = Math.max(0, expiresAt - Date.now());
   if (ms <= 0) {
-    // already expired — dispatch immediately
     try {
       localStorage.removeItem(KEY);
     } catch (e) {}
@@ -37,13 +35,12 @@ export function getDemoSession(): DemoSession | null {
     if (!raw) return null;
     const obj = JSON.parse(raw) as DemoSession;
     if (obj.expiresAt && Date.now() < obj.expiresAt) {
-      // ensure we have a timer scheduled for expiration
       scheduleExpiration(obj.expiresAt);
       return obj;
     }
-    // expired
+
     localStorage.removeItem(KEY);
-    // notify listeners that demo ended
+
     window.dispatchEvent(new Event('demoAuthChanged'));
     return null;
   } catch (e) {
@@ -60,7 +57,7 @@ export function startDemoAdmin(minutes = 10) {
   try {
     localStorage.setItem(KEY, JSON.stringify(session));
   } catch (e) {}
-  // schedule expiration and notify listeners
+
   scheduleExpiration(expiresAt);
   window.dispatchEvent(new Event('demoAuthChanged'));
 }

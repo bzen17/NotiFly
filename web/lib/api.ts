@@ -8,7 +8,6 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Attach access token from localStorage (if present) to all requests
 api.interceptors.request.use((config) => {
   try {
     if (typeof window !== 'undefined') {
@@ -17,7 +16,6 @@ api.interceptors.request.use((config) => {
         config.headers = config.headers || {};
         (config.headers as any).Authorization = `Bearer ${token}`;
       } else {
-        // if demo session active, attach demo headers so backend accepts the request in dev
         const demo = getDemoSession();
         if (demo) {
           config.headers = config.headers || {};
@@ -30,7 +28,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Single in-flight refresh promise to avoid multiple concurrent refresh requests
 let refreshPromise: Promise<void> | null = null;
 
 api.interceptors.response.use(
@@ -38,12 +35,11 @@ api.interceptors.response.use(
   async (err) => {
     const original = err.config;
     if (!original) return Promise.reject(err);
-    // If we already tried refreshing for this request, reject
+
     if (original._retry) return Promise.reject(err);
     const status = err.response ? err.response.status : null;
     if (status !== 401) return Promise.reject(err);
 
-    // attempt refresh
     const refreshToken =
       typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
     if (!refreshToken) return Promise.reject(err);
@@ -73,7 +69,7 @@ api.interceptors.response.use(
     try {
       await refreshPromise;
       original._retry = true;
-      // set new header and retry
+
       const token = localStorage.getItem('accessToken');
       if (token) {
         original.headers = original.headers || {};
