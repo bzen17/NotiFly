@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { getMongo } from '../config/db';
 import logger from '../utils/logger';
 import { ERRORS, JWT_DEFAULTS } from '../constants';
 
@@ -22,14 +23,32 @@ declare global {
  * Middleware to validate Bearer JWT and attach `req.user`.
  * Responds with 401 on missing/invalid tokens.
  */
-export function authMiddleware(req: Request, res: Response, next: NextFunction) {
+export async function authMiddleware(req: Request, res: Response, next: NextFunction) {
   // allow demo auth in non-production for local development or when explicitly enabled via env
   try {
     const demoFlag = (process.env.DEMO_AUTH_ENABLED || '').toLowerCase();
     const demoEnabled = demoFlag === '1' || demoFlag === 'true';
     if ((process.env.NODE_ENV !== 'production' || demoEnabled) && req.headers['x-demo-auth']) {
-      req.user = { id: 'demo-admin', email: 'demo@local', role: 'admin', tenantId: undefined };
-      logger.info({ path: req.path, method: req.method, demoEnabled }, 'Demo auth applied');
+      // determine demo tenant id: prefer explicit env, fallback to an admin user's tenant in DB
+      let demoTenant = process.env.DEMO_TENANT_ID;
+      if (!demoTenant) {
+        try {
+          const mongo = getMongo();
+          const db = (mongo as any).db ? (mongo as any).db() : mongo;
+          const users = db.collection('users');
+          const admin = await users.findOne({ role: 'admin', tenantId: { $exists: true } });
+          if (admin && admin.tenantId) demoTenant = admin.tenantId;
+        } catch (e) {
+          // ignore DB failure and fall back
+          logger.warn({ err: e }, 'Failed to lookup admin tenant for demo auth');
+        }
+      }
+      if (!demoTenant) demoTenant = 'demo-tenant';
+      req.user = { id: 'demo-admin', email: 'demo@local', role: 'admin', tenantId: demoTenant };
+      logger.info(
+        { path: req.path, method: req.method, demoEnabled, demoTenant },
+        'Demo auth applied',
+      );
       return next();
     }
   } catch (e) {}

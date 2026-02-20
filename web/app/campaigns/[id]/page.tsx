@@ -225,18 +225,14 @@ export default function CampaignDetails() {
                         for (const k of Object.keys(locks)) {
                           try {
                             mapped[k] = new Date((locks as any)[k]).getTime();
-                          } catch (e) {
-                            // ignore
-                          }
+                          } catch (e) {}
                         }
                         setRequeueLocks((s) => ({ ...s, ...mapped }));
                       }
                       if (lockedUntil) {
                         try {
                           setCampaignRequeueLockedUntil(new Date(lockedUntil).getTime());
-                        } catch (e) {
-                          // ignore
-                        }
+                        } catch (e) {}
                       } else if (!locks) {
                         const DEFAULT_LOCK_MS = 10 * 60 * 1000;
                         const until = Date.now() + DEFAULT_LOCK_MS;
@@ -305,18 +301,14 @@ export default function CampaignDetails() {
                         for (const k of Object.keys(locks)) {
                           try {
                             mapped[k] = new Date((locks as any)[k]).getTime();
-                          } catch (e) {
-                            // ignore
-                          }
+                          } catch (e) {}
                         }
                         setRequeueLocks((s) => ({ ...s, ...mapped }));
                       }
                       if (lockedUntil) {
                         try {
                           setCampaignRequeueLockedUntil(new Date(lockedUntil).getTime());
-                        } catch (e) {
-                          // ignore
-                        }
+                        } catch (e) {}
                       } else if (!locks) {
                         const DEFAULT_LOCK_MS = 10 * 60 * 1000;
                         const until = Date.now() + DEFAULT_LOCK_MS;

@@ -18,7 +18,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   const isAuthRoute = pathname === '/login' || pathname === '/signup';
 
-  // create a client-side emotion cache that will insert styles at the insertion point
   const cache = React.useMemo(() => createEmotionCache(), []);
 
   return (

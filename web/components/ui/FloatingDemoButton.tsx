@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import React from 'react';
 import Fab from '@mui/material/Fab';
 import Box from '@mui/material/Box';
@@ -30,7 +30,7 @@ export default function FloatingDemoButton() {
     if (active) stopDemo();
     else {
       startDemoAdmin(10);
-      // navigate to home after starting demo
+
       router.push('/');
     }
   }

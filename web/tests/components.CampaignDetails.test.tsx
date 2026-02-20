@@ -3,7 +3,6 @@ import { render, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
 
-// mock next/navigation before importing the page so the imported module uses the mock
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
   useParams: () => ({ id: '1' }),
@@ -19,8 +18,6 @@ function Wrapper({ children }: any) {
 }
 
 function setMatchMedia(matches: boolean) {
-  // simple mock for window.matchMedia used by MUI's useMediaQuery
-  // keep minimal API used by the lib
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     configurable: true,
@@ -39,7 +36,6 @@ function setMatchMedia(matches: boolean) {
 
 describe('CampaignDetails header layout', () => {
   beforeEach(() => {
-    // mock next/navigation hooks
     vi.mock('next/navigation', () => ({
       useRouter: () => ({ push: vi.fn() }),
       useParams: () => ({ id: '1' }),
@@ -47,7 +43,7 @@ describe('CampaignDetails header layout', () => {
   });
 
   test('desktop: Requeue button is before status chip', async () => {
-    setMatchMedia(false); // desktop
+    setMatchMedia(false);
 
     vi.spyOn(hooks, 'useCampaign').mockReturnValue({
       data: {
@@ -80,7 +76,7 @@ describe('CampaignDetails header layout', () => {
   });
 
   test('mobile: Requeue button appears after status chip (on second row)', async () => {
-    setMatchMedia(true); // mobile
+    setMatchMedia(true);
 
     vi.spyOn(hooks, 'useCampaign').mockReturnValue({
       data: {

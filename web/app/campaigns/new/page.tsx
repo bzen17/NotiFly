@@ -55,16 +55,14 @@ export default function NewCampaignPage() {
       if (raw) {
         const parsed = JSON.parse(raw);
         setDraft(parsed);
-        // only show resume when a campaign name exists
+
         if (parsed && parsed.name && String(parsed.name).trim().length > 0) {
           setShowResumePrompt(true);
         }
-        // prevent the immediate persist effect from overwriting the saved draft
+
         skipNextPersist.current = true;
       }
-    } catch (e) {
-      // ignore parse errors
-    }
+    } catch (e) {}
   }, []);
 
   const next = () => setActive((s) => Math.min(s + 1, steps.length - 1));
@@ -73,7 +71,7 @@ export default function NewCampaignPage() {
   const handleUpload = (file?: File) => {
     if (!file) return;
     setUploadedFileName(file.name);
-    // Basic mock: if CSV, try to read and count lines (best-effort)
+
     if (file.name.toLowerCase().endsWith('.csv')) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -83,7 +81,7 @@ export default function NewCampaignPage() {
           .map((l) => l.trim())
           .filter(Boolean);
         setAudienceSize(lines.length);
-        // keep recipients in sync so we can send them to the API
+
         setRecipients(lines.join('\n'));
       };
       reader.readAsText(file);
@@ -108,7 +106,7 @@ export default function NewCampaignPage() {
       recipients: recipientsArr,
       payload: { subject, body },
     };
-    // include tenantId when available from auth; fallback to decoding accessToken
+
     let tenantId = state?.user?.tenantId;
     if (!tenantId) {
       try {
@@ -117,25 +115,18 @@ export default function NewCampaignPage() {
           const decoded = JSON.parse(atob(at.split('.')[1]));
           tenantId = decoded?.tenantId;
         }
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) {}
     }
     if (tenantId) payload.tenantId = tenantId;
     try {
       await create.mutateAsync(payload);
       try {
         localStorage.removeItem(DRAFT_KEY);
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) {}
       router.push('/campaigns');
-    } catch (e) {
-      // error handled by mutation state
-    }
+    } catch (e) {}
   };
 
-  // persist draft on change
   useEffect(() => {
     if (skipNextPersist.current) {
       skipNextPersist.current = false;
@@ -154,9 +145,7 @@ export default function NewCampaignPage() {
     };
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
-    } catch (e) {
-      // ignore storage errors
-    }
+    } catch (e) {}
   }, [active, name, audienceSize, recipients, uploadedFileName, subject, body, channel]);
 
   const resumeDraft = () => {
@@ -166,7 +155,7 @@ export default function NewCampaignPage() {
       const parsed = JSON.parse(raw);
       setActive(typeof parsed.active === 'number' ? parsed.active : 0);
       setName(parsed.name || '');
-      // coerce audienceSize to number or null
+
       const asize = parsed.audienceSize;
       setAudienceSize(typeof asize === 'number' ? asize : asize ? Number(asize) || null : null);
       setRecipients(parsed.recipients || '');
@@ -176,17 +165,13 @@ export default function NewCampaignPage() {
       setChannel(parsed.channel || 'email');
       setShowResumePrompt(false);
       setDraft(parsed);
-    } catch (e) {
-      // if parse fails do nothing
-    }
+    } catch (e) {}
   };
 
   const startFresh = () => {
     try {
       localStorage.removeItem(DRAFT_KEY);
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
     setDraft(null);
     setShowResumePrompt(false);
     setActive(0);
@@ -449,7 +434,7 @@ export default function NewCampaignPage() {
         )}
       </Box>
 
-      {/* show mutation/form errors in a bottom-left snackbar */}
+      {}
       <Snackbar
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         open={snackOpen}

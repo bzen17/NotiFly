@@ -14,7 +14,15 @@ export async function createCampaignController(req: Request, res: Response) {
     'createCampaignController',
   );
   try {
-    const result = await createCampaign(req.body);
+    // Ensure tenantId is present for demo/admin requests: prefer explicit body value,
+    // otherwise derive from authenticated user attached by auth middleware.
+    const body = { ...(req.body || {}) };
+    const user = (req as any).user;
+    if (!body.tenantId && user) {
+      body.tenantId = user.tenantId || user.id;
+    }
+
+    const result = await createCampaign(body);
     return res.status(202).json({ campaignId: result.campaignId });
   } catch (err: any) {
     const requestId = (req as any).requestId || null;

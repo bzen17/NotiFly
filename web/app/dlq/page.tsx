@@ -122,7 +122,6 @@ export default function DlqPage() {
 
   const dlqList = Array.isArray(data) ? data : (data?.items ?? []);
 
-  // group by campaignId
   const groups: Record<string, any[]> = {};
   for (const r of dlqList) {
     const key = r.campaignId ?? r.campaign?._id ?? 'unknown';
@@ -290,7 +289,6 @@ export default function DlqPage() {
                   await deliveryRequeue.mutateAsync(selected.id);
                 }
               } catch (e) {
-                // ignore — mutation handlers will surface errors
               } finally {
                 setConfirmOpen(false);
               }
