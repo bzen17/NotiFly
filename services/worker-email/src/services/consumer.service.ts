@@ -56,10 +56,6 @@ export async function processMessage(redis: any, mongo: any, pg: any, msg: any) 
 
   log.info({ campaignId, id, recipient }, 'Email worker received message');
 
-  // Dedupe per campaign+recipient+attempt to avoid skipping scheduled retries
-  // (previously dedupe ignored attempt which caused retries to be skipped while the original
-  // dedupe key was still valid). Including attempt keeps dedupe semantics for concurrent
-  // duplicates while allowing separate retry attempts.
   const dedupKey = `dedupe:${stableHash(campaignId + '|' + recipient + '|' + String(attempt))}`;
   const notSet = await setDedupKey(redis, dedupKey, DEDUPE_TTL);
   if (!notSet) {
@@ -67,7 +63,6 @@ export async function processMessage(redis: any, mongo: any, pg: any, msg: any) 
     return;
   }
 
-  // Rate limiting per tenant
   const allowed = await allowRate(redis, tenantId || 'default');
   if (!allowed) {
     log.info({ tenant: tenantId }, 'rate limit exceeded, scheduling retry');
@@ -104,7 +99,6 @@ export async function processMessage(redis: any, mongo: any, pg: any, msg: any) 
       error: resp.success ? undefined : (resp as any).errorCode || STATUS.FAILED,
     };
 
-    // Write delivery row to Postgres. Use upsert so retries update existing row
     try {
       await pg.query(
         `INSERT INTO deliveries(campaign_id, tenant_id, recipient, channel, status, code, created_at, updated_at, attempt_count)
@@ -148,7 +142,6 @@ export async function processMessage(redis: any, mongo: any, pg: any, msg: any) 
         );
       }
     } else {
-      // Update campaign status on success
       try {
         await markDeliveryStatus(mongo, campaignId, STATUS.DELIVERED);
       } catch (err) {

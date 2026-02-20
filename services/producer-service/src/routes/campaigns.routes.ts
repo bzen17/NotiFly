@@ -9,10 +9,8 @@ import {
 
 const router = Router();
 
-// Commands
 router.post('/', authMiddleware, createCampaignController);
 
-// Queries
 router.get('/', listCampaignsController);
 router.get('/:campaignId', getCampaignController);
 router.get('/:campaignId/deliveries', listCampaignDeliveriesController);

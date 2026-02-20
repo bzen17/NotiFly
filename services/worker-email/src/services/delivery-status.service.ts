@@ -11,7 +11,6 @@ export async function markDeliveryStatus(mongo: any, campaignId: string, status:
     await campaign.updateOne({ _id: campaignId }, { $set: update });
     return true;
   } catch (err) {
-    // best-effort, return false on error
     return false;
   }
 }

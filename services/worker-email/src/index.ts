@@ -13,9 +13,8 @@ async function shutDown() {
   running = false;
   log.info('Shutting down, closing connections...');
   try {
-    // signal the consumer loop to stop
     stopConsumer();
-    // wait for the consumer loop to finish (it will exit after current BLOCK timeout or earlier)
+
     if (consumerPromise) {
       try {
         await consumerPromise;

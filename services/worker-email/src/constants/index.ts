@@ -1,6 +1,3 @@
-/**
- * Shared constants for worker-email service.
- */
 export const STATUS = {
   DELIVERED: 'delivered',
   FAILED: 'failed',

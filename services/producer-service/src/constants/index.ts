@@ -1,9 +1,5 @@
 import { JWT_ACCESS_EXP, JWT_REFRESH_EXP, JWT_SECRET } from '../config/env';
 
-/**
- * Shared constants for producer-service.
- * Keep descriptive names for errors, roles and jwt defaults.
- */
 export const ERRORS = {
   EMAIL_PASSWORD_NAME_REQUIRED: 'email_password_name_required',
   EMAIL_AND_PASSWORD_REQUIRED: 'email_and_password_required',
@@ -36,9 +32,9 @@ export const STREAMS = {
 
 export const STATUS = {
   QUEUED: 'queued',
-  // 'delivered' is the canonical DB value for successful deliveries
+
   DELIVERED: 'delivered',
-  // alias for older code expecting 'sent'
+
   SENT: 'delivered',
   REQUEUED: 'requeued',
   FAILED: 'failed',

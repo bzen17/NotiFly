@@ -19,17 +19,11 @@ declare global {
   }
 }
 
-/**
- * Middleware to validate Bearer JWT and attach `req.user`.
- * Responds with 401 on missing/invalid tokens.
- */
 export async function authMiddleware(req: Request, res: Response, next: NextFunction) {
-  // allow demo auth in non-production for local development or when explicitly enabled via env
   try {
     const demoFlag = (process.env.DEMO_AUTH_ENABLED || '').toLowerCase();
     const demoEnabled = demoFlag === '1' || demoFlag === 'true';
     if ((process.env.NODE_ENV !== 'production' || demoEnabled) && req.headers['x-demo-auth']) {
-      // determine demo tenant id: prefer explicit env, fallback to an admin user's tenant in DB
       let demoTenant = process.env.DEMO_TENANT_ID;
       if (!demoTenant) {
         try {
@@ -39,7 +33,6 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
           const admin = await users.findOne({ role: 'admin', tenantId: { $exists: true } });
           if (admin && admin.tenantId) demoTenant = admin.tenantId;
         } catch (e) {
-          // ignore DB failure and fall back
           logger.warn({ err: e }, 'Failed to lookup admin tenant for demo auth');
         }
       }
@@ -51,7 +44,9 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
       );
       return next();
     }
-  } catch (e) {}
+  } catch (e) {
+    logger.warn({ err: e }, 'Error while checking demo auth');
+  }
 
   const auth = (req.headers.authorization || '').split(' ');
   if (auth.length !== 2 || auth[0] !== 'Bearer') {
@@ -75,9 +70,6 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
   }
 }
 
-/**
- * Require a specific role on the authenticated user.
- */
 export function requireRole(role: string) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) return res.status(401).json({ error: ERRORS.FORBIDDEN });

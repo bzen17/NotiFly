@@ -2,12 +2,6 @@ import { getRedis } from '../config/db';
 import logger from '../utils/logger';
 import { STREAMS } from '../constants';
 
-/**
- * Publish an object payload to a Redis stream. Supports node-redis v4 (`xAdd`),
- * older clients exposing `xadd`, and falls back to PUB/SUB `publish` when necessary.
- *
- * `streamName` can be one of the well-known streams in `STREAMS` or a custom stream.
- */
 export async function publishToStream(streamName: string, payload: any) {
   const redis = await getRedis();
 
@@ -16,7 +10,7 @@ export async function publishToStream(streamName: string, payload: any) {
   try {
     logger.info({ streamName, payload }, 'Publishing payload to stream');
   } catch (e) {
-    // ignore logging errors
+    logger.warn({ err: e }, 'Failed to log publish attempt to stream');
   }
 
   if (typeof redis.xAdd === 'function') {

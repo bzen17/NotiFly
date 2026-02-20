@@ -24,12 +24,11 @@ function parseFields(fields: string[]) {
 async function dedupeCampaign(redis: any, campaignId: string) {
   const key = `dedupe:${campaignId}`;
   const res = await redis.set(key, '1', { NX: true, EX: DEDUPE_TTL_SECONDS });
-  // node-redis returns 'OK' when key set, null when not set
+
   return res === 'OK';
 }
 
 function resolveChannelsForRecipient(recipientEntry: any): string[] {
-  // Determine which channels to use for a recipient entry.
   if (!recipientEntry) return [];
   if (typeof recipientEntry === 'string') {
     return recipientEntry.includes('@') ? ['email'] : ['push'];
@@ -66,7 +65,7 @@ export async function runRouter() {
           const id = message.id;
           const fields = message.message;
           const f = Array.isArray(fields) ? parseFields(fields as string[]) : fields;
-          // Parse campaign pointer and payload from the stream entry
+
           const explicitcampaignId = f.campaignId;
           const raw = f.payload || f.data || '{}';
           let campaign: CampaignPayload;
@@ -76,14 +75,12 @@ export async function runRouter() {
             campaign = { payload: raw } as any;
           }
 
-          // Determine canonical campaign id
           const campaignId = explicitcampaignId || campaign.campaignId || id;
           logger.debug(
             { redisId: id, explicitcampaignId, campaignId, fields: f },
             'Parsed incoming message',
           );
 
-          // If this is a targeted requeue for a single recipient, bypass the campaign-level dedupe
           const requeueFlag =
             f.requeue || (campaign && (campaign.requeue || campaign.requeue === true));
           const explicitRecipient = f.recipient || campaign?.recipient || campaign?.recipients;
@@ -97,7 +94,6 @@ export async function runRouter() {
             continue;
           }
 
-          // Load the full campaign document from MongoDB when available
           let dbCampaign = campaign;
           if (campaignId) {
             const mongo = dbClient;
@@ -109,9 +105,9 @@ export async function runRouter() {
             if (found) dbCampaign = { ...found, ...(campaign || {}) };
             logger.debug({ campaignId, found: !!found }, 'Loaded campaign from mongo');
           }
-          // Expand recipients and fan-out to channel streams
+
           let recipients = dbCampaign.recipients || [];
-          // If this incoming pointer is a requeue targeted at a single recipient, use that recipient only
+
           if (requeueFlag && explicitRecipient) {
             const r = Array.isArray(explicitRecipient) ? explicitRecipient[0] : explicitRecipient;
             recipients = [typeof r === 'object' && r.address ? r.address : r];
@@ -125,7 +121,6 @@ export async function runRouter() {
               const targetStream =
                 ch === 'email' ? STREAM_EMAIL : ch === 'sms' ? STREAM_SMS : STREAM_PUSH;
 
-              // publish message containing campaign pointer + recipient info + payload
               const msg = {
                 campaignId,
                 recipient: r.address || r,
@@ -147,12 +142,10 @@ export async function runRouter() {
                   { err, targetStream, campaignId, channel: ch },
                   'Failed to publish to channel stream',
                 );
-                // do not ack incoming so it can be retried
               }
             }
           }
 
-          // ack incoming
           await redis.xAck(INCOMING_STREAM, CONSUMER_GROUP, id);
         }
       }

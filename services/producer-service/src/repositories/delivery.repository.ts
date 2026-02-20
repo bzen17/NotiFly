@@ -1,7 +1,6 @@
 import { STATUS } from '../constants';
 
 export async function listForDeliveries(pg: any, eventId: string, { offset = 0, limit = 20 }: any) {
-  // Select stable columns only to remain compatible with older deployments
   const q = `SELECT id, campaign_id, recipient, status, code, attempt_count, created_at, updated_at FROM deliveries WHERE campaign_id = $1 ORDER BY created_at DESC OFFSET $2 LIMIT $3`;
   const res = await pg.query(q, [eventId, offset, limit]);
   return res.rows;

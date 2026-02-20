@@ -21,16 +21,6 @@ function usersColl() {
   return db.collection('users');
 }
 
-/**
- * Create a new user in MongoDB.
- * @param email - user's email address
- * @param password - plain text password (will be hashed)
- * @param name - display name
- * @param role - role to assign (defaults to tenant)
- * @param tenantId - optional tenant id to associate
- * @param extra - additional fields to merge into user document
- * @returns minimal public user object
- */
 export async function createUser(
   email: string,
   password: string,
@@ -59,10 +49,6 @@ export async function verifyUserPassword(user: any, password: string) {
   return bcrypt.compare(password, user.passwordHash || user.password);
 }
 
-/**
- * Generate a signed JWT access token for a user.
- * @param user - user object containing at minimum an id/email/role
- */
 export function generateAccessToken(user: any) {
   const payload: any = {
     tenantId: String(user._id || user.id),
@@ -76,9 +62,6 @@ export function generateAccessToken(user: any) {
   );
 }
 
-/**
- * Generate a signed refresh token (opaque token encoded as jwt for simplicity).
- */
 export function generateRefreshToken() {
   return jwt.sign({ t: 'r' } as any, JWT_SECRET as any, { expiresIn: REFRESH_EXP } as any);
 }

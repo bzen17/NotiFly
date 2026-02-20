@@ -20,7 +20,6 @@ export async function signupController(req: Request, res: Response) {
   const exists = await db.collection('users').findOne({ email });
   if (exists) return res.status(409).json({ error: 'user_exists' });
 
-  // If no users exist, make this first user an admin
   const userCount = await db.collection('users').countDocuments();
   const role = userCount === 0 ? ROLES.ADMIN : ROLES.TENANT;
 
@@ -58,7 +57,7 @@ export async function loginController(req: Request, res: Response) {
 export async function refreshController(req: Request, res: Response) {
   const { refreshToken } = req.body;
   if (!refreshToken) return res.status(400).json({ error: ERRORS.REFRESH_REQUIRED });
-  // Try to find user with this refresh token
+
   const mongo = require('../config/db').getMongo();
   const db = mongo.db ? mongo.db() : mongo;
   const found = await db.collection('users').findOne({ refreshToken });
@@ -79,7 +78,6 @@ export async function logoutController(req: Request, res: Response) {
 }
 
 export async function createUserController(req: Request, res: Response) {
-  // Admin-only: create a new user and allow setting role
   const actor = (req as any).user;
   if (!actor || actor.role !== ROLES.ADMIN)
     return res.status(403).json({ error: ERRORS.FORBIDDEN });
