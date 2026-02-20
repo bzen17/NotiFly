@@ -23,11 +23,21 @@ declare global {
  * Responds with 401 on missing/invalid tokens.
  */
 export function authMiddleware(req: Request, res: Response, next: NextFunction) {
+<<<<<<< HEAD
+  // allow demo auth in non-production for local development or when explicitly enabled via env
+  try {
+    const demoFlag = (process.env.DEMO_AUTH_ENABLED || '').toLowerCase();
+    const demoEnabled = demoFlag === '1' || demoFlag === 'true';
+    if ((process.env.NODE_ENV !== 'production' || demoEnabled) && req.headers['x-demo-auth']) {
+      req.user = { id: 'demo-admin', email: 'demo@local', role: 'admin', tenantId: undefined };
+      logger.info({ path: req.path, method: req.method, demoEnabled }, 'Demo auth applied');
+=======
   // allow demo auth in non-production for local development
   try {
     if (process.env.NODE_ENV !== 'production' && req.headers['x-demo-auth']) {
       req.user = { id: 'demo-admin', email: 'demo@local', role: 'admin', tenantId: undefined };
       logger.info({ path: req.path, method: req.method }, 'Demo auth applied');
+>>>>>>> main
       return next();
     }
   } catch (e) {}
