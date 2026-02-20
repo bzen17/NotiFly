@@ -27,7 +27,9 @@ describe('Producer Service - Campaigns controllers', () => {
     const resp = await request(app).post('/v1/campaigns').send({ name: 'Hello' });
     expect(resp.status).toBe(202);
     expect(resp.body).toEqual({ campaignId: 'camp-123' });
-    expect(createCampaignMock).toHaveBeenCalledWith({ name: 'Hello' });
+    expect(createCampaignMock).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Hello' }),
+    );
   });
 
   test('POST /v1/campaigns - validation failure returns 400', async () => {

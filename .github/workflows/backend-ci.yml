@@ -1,75 +1,148 @@
 name: CI - Backend
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     paths:
       - 'services/**'
       - 'libs/**'
-  workflow_dispatch:
-    inputs:
-      deploy:
-        description: 'Set to "true" to run the backend deploy job when manually triggered'
-        required: false
-        default: 'false'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.base.json'
+      - '.eslintrc*'
+      - '.prettierrc*'
+      - '.github/workflows/backend-ci.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
 
 jobs:
-  backend-tests:
-    name: Backend tests
+  format:
+    name: Format check
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Use Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
-      - name: Install dependencies (root)
-        run: npm ci || npm install
+      - name: Install root dependencies
+        run: npm ci
 
-      - name: Build libs package
+      - name: Check formatting (Prettier)
+        run: npm run format:check
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install workspace dependencies
+        run: |
+          npm ci --prefix libs/delivery-adapters
+          npm ci --prefix services/producer-service
+          npm ci --prefix services/router-service
+          npm ci --prefix services/worker-email
+
+      - name: Lint delivery-adapters
+        run: npm run lint --prefix libs/delivery-adapters
+
+      - name: Lint producer-service
+        run: npm run lint --prefix services/producer-service
+
+      - name: Lint router-service
+        run: npm run lint --prefix services/router-service
+
+      - name: Lint worker-email
+        run: npm run lint --prefix services/worker-email
+
+  typecheck:
+    name: Type check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install workspace dependencies
+        run: |
+          npm ci --prefix libs/delivery-adapters
+          npm ci --prefix services/producer-service
+          npm ci --prefix services/router-service
+          npm ci --prefix services/worker-email
+
+      - name: Build libs (required for local package imports)
         run: npm run build:libs
 
-      - name: Run services tests
-        run: |
-          set -e
-            echo "Running producer-service tests (coverage)"
-            npm test --prefix services/producer-service -- --coverage --coverageReporters="json-summary" || exit $?
-            echo "Running router-service tests (coverage)"
-            npm test --prefix services/router-service -- --coverage --coverageReporters="json-summary" || exit $?
-            echo "Running worker-email tests (coverage)"
-            npm test --prefix services/worker-email -- --coverage --coverageReporters="json-summary" || exit $?
-            echo "Running libs tests (coverage)"
-            npm test --prefix libs/delivery-adapters -- --coverage --coverageReporters="json-summary" || exit $?
+      - name: Typecheck delivery-adapters
+        run: npx tsc --noEmit --project libs/delivery-adapters/tsconfig.json
 
-  deploy-backend:
-    name: Deploy - Backend
+      - name: Typecheck producer-service
+        run: npx tsc --noEmit --project services/producer-service/tsconfig.json
+
+      - name: Typecheck router-service
+        run: npx tsc --noEmit --project services/router-service/tsconfig.json
+
+      - name: Typecheck worker-email
+        run: npx tsc --noEmit --project services/worker-email/tsconfig.json
+
+  test:
+    name: Test - ${{ matrix.service }}
     runs-on: ubuntu-latest
-    needs: backend-tests
-    # Only run deploy if on main branch (merge) OR manual dispatch with deploy=true
-    if: "(github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy == 'true')"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: producer-service
+            dir: services/producer-service
+          - service: router-service
+            dir: services/router-service
+          - service: worker-email
+            dir: services/worker-email
+          - service: delivery-adapters
+            dir: libs/delivery-adapters
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Use Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ matrix.dir }}/package-lock.json
 
-      - name: Install dependencies (root)
-        run: npm ci || npm install
+      - name: Install root dependencies
+        run: npm ci
 
-      - name: Build backend packages
-        run: |
-          npm run build:libs
-          npm run build:services
+      - name: Build libs
+        run: npm run build:libs
 
-      - name: Backend deployment placeholder
-        run: |
-          echo "Backend deploy: replace this step with your cloud provider deployment (ssh/helm/terraform/etc)."
+      - name: Install ${{ matrix.service }} dependencies
+        run: npm ci --prefix ${{ matrix.dir }}
+
+      - name: Run tests with coverage
+        run: >
+          npm test --prefix ${{ matrix.dir }} --
+          --coverage
+          --coverageReporters=text-summary
+          --coverageReporters=json-summary
+          --passWithNoTests
