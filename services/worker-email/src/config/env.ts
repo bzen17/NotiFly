@@ -1,7 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Redis: prefer an explicit URL override, otherwise build from parts
 export const REDIS_HOST = process.env.REDIS_HOST || 'localhost';
 export const REDIS_PORT = process.env.REDIS_PORT || '6379';
 export const REDIS_PASSWORD = process.env.REDIS_PASSWORD || process.env.REDIS_PASS || '';
@@ -11,7 +10,6 @@ export const REDIS_URL =
     ? `redis://:${encodeURIComponent(REDIS_PASSWORD)}@${REDIS_HOST}:${REDIS_PORT}`
     : `redis://${REDIS_HOST}:${REDIS_PORT}`);
 
-// Mongo
 export const MONGO_HOST = process.env.MONGO_HOST || 'localhost';
 export const MONGO_PORT = process.env.MONGO_PORT || '27017';
 export const MONGO_USER = process.env.MONGO_USER || process.env.MONGO_USERNAME || '';
@@ -24,7 +22,6 @@ export const MONGO_URI =
     ? `mongodb://${encodeURIComponent(MONGO_USER)}:${encodeURIComponent(MONGO_PASS)}@${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}?authSource=admin`
     : `mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}`);
 
-// Postgres: prefer full connection string override, otherwise build from parts
 export const PG_HOST = process.env.PG_HOST || 'localhost';
 export const PG_PORT = process.env.PG_PORT || '5432';
 export const PG_USER = process.env.PG_USER || 'postgres';

@@ -9,7 +9,6 @@ let pgPool: Pool | null = null;
 
 export async function connectToDatastores() {
   if (!redisClient) {
-    // Validate protocol: node-redis expects redis:// or rediss:// URLs.
     if (REDIS_URL.startsWith('http://') || REDIS_URL.startsWith('https://')) {
       throw new Error(
         'Invalid Redis protocol in REDIS_URL: http(s) URLs are not supported by node-redis.\n' +
@@ -39,8 +38,6 @@ export function getMongo() {
 
 export function getPgPool() {
   if (!pgPool) {
-    // Lazy-load PG pool using PG_CONNECTION env; Pool constructor tolerates empty string but
-    // it's expected the environment will supply a valid connection string when Postgres is used.
     pgPool = new Pool({ connectionString: PG_CONNECTION });
   }
   return pgPool;

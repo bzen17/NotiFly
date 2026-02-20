@@ -13,8 +13,9 @@ services:
     repo: 'https://github.com/bzen17/NotiFly'
     branch: main
     root: services/producer-service
-    buildCommand: 'npm install && npm run build:all && chmod +x scripts/package-single.sh && ./scripts/package-single.sh
-    startCommand: npm run start
+    buildCommand: >
+      npm install && npm run build:all && chmod +x scripts/package-single.sh && ./scripts/package-single.sh
+    startCommand: 'npm run start'
     autoDeploy: true
 
     # Recommended: replace these placeholder values with actual secrets in Render dashboard.

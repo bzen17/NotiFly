@@ -17,7 +17,7 @@ export async function list(mongo: any, { skip = 0, limit = 20, filter = {} }: an
     .skip(Number(skip))
     .limit(Number(limit));
   const items = await cursor.toArray();
-  // map to stable shape
+
   return items.map((it: any) => ({
     _id: it._id,
     name: it.name,

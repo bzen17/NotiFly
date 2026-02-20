@@ -10,7 +10,6 @@ export function getEmailAdapter(provider?: string) {
     return new SESAdapter();
   }
 
-  // default to SendGrid
   return new SendGridAdapter();
 }
 

@@ -8,7 +8,7 @@ export function getRedisClient(): RedisClientType {
   if (client) return client;
   client = createClient({ url: REDIS_URL });
   client.on('error', (err) => logger.warn({ err }, 'Redis client error'));
-  // start connecting in background; callers should handle readiness if needed
+
   client.connect().catch((err) => logger.warn({ err }, 'Redis connect failed'));
   return client;
 }

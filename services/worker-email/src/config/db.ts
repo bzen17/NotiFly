@@ -2,6 +2,7 @@ import { createClient } from 'redis';
 import { MongoClient } from 'mongodb';
 import { Pool } from 'pg';
 import { REDIS_URL, MONGO_URI, PG_CONNECTION } from './env';
+import logger from '../utils/logger';
 
 let redisClient: ReturnType<typeof createClient> | null = null;
 let mongoClient: MongoClient | null = null;
@@ -17,17 +18,15 @@ export async function getRedis() {
       );
     }
     redisClient = createClient({ url: REDIS_URL });
-    // Attach an error handler to avoid unhandled exceptions bubbling during
-    // shutdown when the client is forcefully disconnected by the server.
+
     redisClient.on('error', (err: any) => {
       try {
-        // Ignore DisconnectsClientError which happens when quitting/disconnecting
         const msg = err && (err.message || String(err));
         if (msg && msg.toLowerCase().includes('disconnects client')) {
           return;
         }
       } catch (e) {
-        // swallow
+        logger.warn({ err: e }, 'Error while handling redis error callback');
       }
     });
     await redisClient.connect();
@@ -52,7 +51,6 @@ export function getPgPool() {
 
 export async function closeRedis() {
   if (redisClient) {
-    // Prefer graceful QUIT if available to avoid interrupting in-flight stream reads
     try {
       if (typeof (redisClient as any).quit === 'function') {
         await (redisClient as any).quit();
@@ -60,11 +58,12 @@ export async function closeRedis() {
         await redisClient.disconnect();
       }
     } catch (err) {
-      // As a last resort, force disconnect
+      logger.warn({ err }, 'Failed to quit redis client gracefully, attempting disconnect');
+
       try {
         await redisClient.disconnect();
       } catch (e) {
-        // swallow - we're shutting down
+        logger.warn({ err: e }, 'Failed to force-disconnect redis client');
       }
     }
   }

@@ -8,7 +8,7 @@ let redisClient: any = null;
 
 export async function stopConsumer() {
   running = false;
-  // Wake up the blocking XREADGROUP by adding a noop entry to the stream
+
   try {
     if (redisClient && typeof redisClient.xAdd === 'function') {
       await redisClient.xAdd(STREAM, '*', { __shutdown: '1' });
@@ -24,7 +24,6 @@ export async function runEmailConsumer() {
   const mongo = await getMongo();
   const pg = getPgPool();
 
-  // Ensure deliveries table exists - best effort
   try {
     await pg.query(`CREATE TABLE IF NOT EXISTS deliveries (
         id serial PRIMARY KEY,
@@ -43,7 +42,6 @@ export async function runEmailConsumer() {
         'CREATE UNIQUE INDEX IF NOT EXISTS deliveries_campaign_recipient_uq ON deliveries(campaign_id, recipient)',
       );
     } catch (e) {
-      // best-effort: index creation may fail under some permissions; warn and continue
       log.warn({ err: e }, 'could not create unique index on deliveries(campaign_id, recipient)');
     }
   } catch (err) {
@@ -71,8 +69,6 @@ export async function runEmailConsumer() {
         COUNT: 10,
       })) as any;
       if (!res) {
-        // No messages on main stream; still check scheduled retries so retry processing
-        // doesn't depend on incoming traffic.
         try {
           await checkAndProcessRetries(redis, mongo, pg);
         } catch (err) {
@@ -86,7 +82,6 @@ export async function runEmailConsumer() {
           const id = message.id;
           const msg = message.message;
 
-          // Ignore internal shutdown wakeups
           if (msg && (msg.__shutdown === '1' || msg.__shutdown === 1)) {
             try {
               await redis.xAck(stream, group, id);
@@ -112,7 +107,7 @@ export async function runEmailConsumer() {
           }
         }
       }
-      // After processing batch from main stream, also check scheduled retries
+
       try {
         await checkAndProcessRetries(redis, mongo, pg);
       } catch (err) {
@@ -126,7 +121,6 @@ export async function runEmailConsumer() {
 }
 
 async function checkAndProcessRetries(redis: any, mongo: any, pg: any) {
-  // Read a small batch of retry entries and process those that are due
   let entries: any[] = [];
   try {
     if (typeof redis.xRange === 'function') {
@@ -153,7 +147,6 @@ async function checkAndProcessRetries(redis: any, mongo: any, pg: any) {
     }
 
     if (!payload || !payload.when || !payload.campaignId) {
-      // malformed -> delete
       try {
         if (typeof redis.xDel === 'function') await redis.xDel('notifications.retry', id);
       } catch (err) {
@@ -162,9 +155,8 @@ async function checkAndProcessRetries(redis: any, mongo: any, pg: any) {
       continue;
     }
 
-    if (Number(payload.when) > Date.now()) continue; // not due yet
+    if (Number(payload.when) > Date.now()) continue;
 
-    // Build a message compatible with processMessage
     const body = {
       campaignId: payload.campaignId,
       recipient: payload.recipient,
@@ -175,7 +167,7 @@ async function checkAndProcessRetries(redis: any, mongo: any, pg: any) {
 
     try {
       await processMessage(redis, mongo, pg, [id, { body: JSON.stringify(body) }]);
-      // remove entry after processing
+
       try {
         if (typeof redis.xDel === 'function') await redis.xDel('notifications.retry', id);
       } catch (err) {
@@ -183,7 +175,6 @@ async function checkAndProcessRetries(redis: any, mongo: any, pg: any) {
       }
     } catch (err) {
       log.warn({ err, id }, 'processing retry entry failed');
-      // leave entry for reprocessing or DLQ handling by existing logic
     }
   }
 }

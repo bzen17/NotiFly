@@ -5,7 +5,7 @@ import app from './app';
 import { connectToDatastores } from './config/db';
 import { PORT } from './config/env';
 import fs from 'fs';
-// Prefer the module's __dirname when available (CommonJS), otherwise fall back to process.cwd()
+
 const runtimeDir = typeof __dirname !== 'undefined' ? __dirname : process.cwd();
 const servicesRoot = path.resolve(runtimeDir, '..', '..');
 
@@ -30,7 +30,6 @@ function spawnService(name: string) {
     return p;
   }
 
-  // Fallback to `npm run start` if dist not present
   const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
   if (fs.existsSync(path.join(cwd, 'package.json'))) {
     logger.warn({ script }, `${name} dist missing; falling back to 'npm run start'`);
@@ -54,7 +53,7 @@ function shutdown() {
     try {
       c.kill();
     } catch (e) {
-      // ignore
+      logger.warn({ err: e }, 'Error killing child process');
     }
   }
 }
@@ -67,12 +66,10 @@ export default async function bootstrap() {
   try {
     await connectToDatastores();
 
-    // Start HTTP API in this process
     app.listen(Number(PORT), '0.0.0.0', () => {
       logger.info({ port: PORT }, 'Producer service HTTP API listening');
     });
 
-    // Spawn optional sibling services (will fallback to npm start if dist missing)
     spawnService('router-service');
     spawnService('worker-email');
   } catch (err) {

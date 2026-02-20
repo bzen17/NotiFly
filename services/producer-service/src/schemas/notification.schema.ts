@@ -1,4 +1,3 @@
-// Minimal runtime validation example (expand as needed)
 import Joi from 'joi';
 
 export const notificationSchema = Joi.object({

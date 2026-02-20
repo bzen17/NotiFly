@@ -9,16 +9,13 @@ import campaignRepository from '../repositories/campaign.repository';
 import { getMongo } from '../config/db';
 import { ERRORS } from '../constants';
 
-/**
- * Query controllers for campaigns: list, get, and list deliveries.
- */
 export async function listCampaignsController(req: Request, res: Response) {
   try {
     const page = Number(req.query.page || 1);
     const limit = Number(req.query.limit || 20);
     const { page: _p, limit: _l, ...queryFilter } = req.query || {};
     const filter: any = { ...(queryFilter as any) };
-    // If requester is a tenant, scope campaigns to their tenantId
+
     const user = (req as any).user;
     if (user && user.role === 'tenant') {
       filter.tenantId = user.tenantId || user.id;
@@ -48,7 +45,7 @@ export async function getCampaignController(req: Request, res: Response) {
 export async function listCampaignDeliveriesController(req: Request, res: Response) {
   try {
     const { campaignId } = req.params;
-    // If tenant, verify ownership of the campaign
+
     const user = (req as any).user;
     if (user && user.role === 'tenant') {
       const mongo = await getMongo();

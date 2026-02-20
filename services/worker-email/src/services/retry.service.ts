@@ -2,10 +2,9 @@ import { MAX_RETRIES } from '../config/env';
 import { log } from '../utils/logger';
 
 export async function scheduleRetry(redis: any, campaign: any, attempt: number, mongo?: any) {
-  // Exponential backoff: min(1 hour, 5 * 2^attempt) seconds
   const backoff = 5;
   const when = Date.now() + backoff * 1000;
-  // Preserve recipient and tenantId when present so retry consumer can re-publish a full pointer
+
   const payload: any = { campaignId: campaign._id, attempt, when };
   if (campaign.recipient) payload.recipient = campaign.recipient;
   if (campaign.tenantId) payload.tenantId = campaign.tenantId;

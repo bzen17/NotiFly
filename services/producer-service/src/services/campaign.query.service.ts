@@ -3,16 +3,11 @@ import campaignRepository from '../repositories/campaign.repository';
 import deliveryRepository from '../repositories/delivery.repository';
 import { AGGREGATE_STATUS } from '../constants';
 
-/**
- * List campaigns with basic delivery counts.
- * @param options - pagination and filter options
- */
 export async function listCampaigns({ page = 1, limit = 20, filter = {} }: any) {
   const skip = (page - 1) * limit;
   const mongo = await getMongo();
   const items = await campaignRepository.list(mongo, { skip, limit, filter });
 
-  // For each campaign, fetch counts from Postgres
   const pg = getPgPool();
   const ids = items.map((i: any) => i._id);
   const counts = await deliveryRepository.countsForDeliveries(pg, ids);
@@ -41,14 +36,11 @@ function computeStatus(c: any) {
   return AGGREGATE_STATUS.FAILED;
 }
 
-/**
- * Retrieve a single campaign with aggregated delivery metrics.
- */
 export async function getCampaign(campaignId: string) {
   const mongo = await getMongo();
   const doc = await campaignRepository.findById(mongo, campaignId);
   if (!doc) return null;
-  // Fetch delivery counts from Postgres
+
   const pg = getPgPool();
   const counts = await deliveryRepository.countsForDeliveries(pg, [campaignId]);
   const c = counts[campaignId] || { total: 0, success: 0, failure: 0 };
@@ -74,14 +66,11 @@ function summarizePayload(payload: any) {
   return { title: payload?.title || payload?.subject || null };
 }
 
-/**
- * List deliveries for a given campaign from Postgres and annotate with campaign channel and requeue lock.
- */
 export async function listDeliveriesForCampaign(campaignId: string, { page = 1, limit = 20 }: any) {
   const pg = getPgPool();
   const offset = (page - 1) * limit;
   const rows = await deliveryRepository.listForDeliveries(pg, campaignId, { offset, limit });
-  // Fetch campaign/event from Mongo to obtain channel (deliveries table may not store it)
+
   const mongo = await getMongo();
   const ev = await campaignRepository.findById(mongo, campaignId);
   const channel = ev?.channel || null;

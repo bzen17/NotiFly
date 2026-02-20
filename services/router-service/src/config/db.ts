@@ -39,7 +39,6 @@ export async function ensureConsumerGroup(stream: string, group: string) {
   try {
     await r.xGroupCreate(stream, group, '0', { MKSTREAM: true });
   } catch (e: any) {
-    // node-redis throws an Error containing BUSYGROUP when group exists
     if (String(e).includes('BUSYGROUP')) return;
     throw e;
   }

@@ -3,19 +3,12 @@ import logger from '../utils/logger';
 import { createCampaign } from '../services/campaign.command.service';
 import { ERRORS } from '../constants';
 
-/**
- * Controller to create a campaign. Validates input via service and returns
- * a 202 accepted with the generated campaign id on success.
- */
-
 export async function createCampaignController(req: Request, res: Response) {
   logger.info(
     { user: (req as any).user?.id || null, bodyKeys: Object.keys(req.body || {}) },
     'createCampaignController',
   );
   try {
-    // Ensure tenantId is present for demo/admin requests: prefer explicit body value,
-    // otherwise derive from authenticated user attached by auth middleware.
     const body = { ...(req.body || {}) };
     const user = (req as any).user;
     if (!body.tenantId && user) {

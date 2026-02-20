@@ -2,16 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import logger from '../utils/logger';
 import { randomUUID } from 'crypto';
 
-/**
- * Safely serialize request/response bodies for logging.
- * - Returns `null` for empty values
- * - Truncates very large payloads
- * - Returns a marker for unserializable values
- */
 function safeBody(obj: any) {
   try {
     if (!obj) return null;
-    // avoid logging huge payloads
+
     const s = JSON.stringify(obj);
     if (s.length > 1000) return { _truncated: true, length: s.length };
     return JSON.parse(s);
@@ -38,10 +32,9 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
       'Incoming request',
     );
   } catch (e) {
-    // ignore logging problems
+    logger.warn({ err: e }, 'Request logger initial log failed');
   }
 
-  // Intercept json/send to capture response payload
   const originalJson = res.json.bind(res);
   const originalSend = res.send.bind(res);
 
@@ -61,7 +54,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
         'Sending JSON response',
       );
     } catch (e) {
-      // ignore
+      logger.warn({ err: e }, 'Request logger JSON response log failed');
     }
     return originalJson(body);
   };
@@ -80,7 +73,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
         'Sending response',
       );
     } catch (e) {
-      // ignore
+      logger.warn({ err: e }, 'Request logger send response log failed');
     }
     return originalSend(body);
   };
@@ -93,7 +86,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
         'Request handled',
       );
     } catch (e) {
-      // ignore
+      logger.warn({ err: e }, 'Request logger finish handler failed');
     }
   });
 

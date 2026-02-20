@@ -3,10 +3,6 @@ import logger from '../utils/logger';
 import { listDlq, requeueDlq, requeueDeliveryRow, requeueCampaign } from '../services/dlq.service';
 import { ERRORS } from '../constants';
 
-/**
- * Controllers for DLQ listing and requeue operations.
- */
-
 export async function listDlqController(req: Request, res: Response) {
   logger.info({ user: (req as any).user?.id || null, query: req.query }, 'listDlqController');
   try {

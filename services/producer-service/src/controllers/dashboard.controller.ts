@@ -9,7 +9,7 @@ export async function dashboardMetricsController(req: Request, res: Response) {
     const user = (req as any).user;
     const range = (req.query.range as string) || '24h';
     const metrics = await getDashboardMetrics(user, range);
-    // Optional debug diagnostics: if ?debug=1 include DB connection info and simple checks
+
     if ((req.query.debug as string) === '1' || NODE_ENV !== 'production') {
       try {
         const pg = getPgPool();

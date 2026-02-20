@@ -22,7 +22,6 @@ export const MONGO_URI =
     ? `mongodb://${encodeURIComponent(MONGO_USER)}:${encodeURIComponent(MONGO_PASS)}@${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}?authSource=admin`
     : `mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}`);
 
-// Postgres: prefer full connection string override, otherwise build from parts
 export const PG_HOST = process.env.PG_HOST || 'localhost';
 export const PG_PORT = process.env.PG_PORT || '5432';
 export const PG_USER = process.env.PG_USER || 'postgres';
@@ -37,7 +36,6 @@ export const JWT_SECRET = process.env.JWT_SECRET || 'REDACTED';
 export const JWT_ACCESS_EXP = process.env.JWT_ACCESS_EXP || '15m';
 export const JWT_REFRESH_EXP = process.env.JWT_REFRESH_EXP || '7d';
 
-// Optional feature flags for multi-component bootstrap
 export const ENABLE_ROUTER = (process.env.ENABLE_ROUTER || 'false').toLowerCase() === 'true';
 export const ENABLE_EMAIL_WORKER =
   (process.env.ENABLE_EMAIL_WORKER || 'false').toLowerCase() === 'true';

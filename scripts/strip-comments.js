@@ -8,7 +8,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const ROOT = path.resolve(__dirname, '../web');
+// Accept a target path as the first CLI arg (relative to repo root dir next to this script)
+// Example: `node scripts/strip-comments.js ../web` or `node scripts/strip-comments.js ../services`
+const TARGET = process.argv[2] || '../web';
+const ROOT = path.resolve(__dirname, TARGET);
 const exts = new Set(['.ts', '.tsx', '.js', '.jsx', '.css', '.scss']);
 const changed = [];
 
@@ -17,7 +20,9 @@ function walk(dir) {
   for (const e of entries) {
     const full = path.join(dir, e.name);
     if (e.isDirectory()) {
-      if (e.name === 'node_modules' || e.name === '.next' || e.name === '.git') continue;
+      // Skip common build and dependency folders
+      if (e.name === 'node_modules' || e.name === '.next' || e.name === '.git' || e.name === 'dist')
+        continue;
       walk(full);
     } else if (e.isFile()) {
       if (exts.has(path.extname(e.name))) {
