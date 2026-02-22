@@ -22,7 +22,13 @@ export default function DemoWelcomeModal() {
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
   React.useEffect(() => {
-    const seen = localStorage.getItem(SEEN_KEY);
+    let seen: string | null = null;
+    try {
+      seen = localStorage.getItem(SEEN_KEY);
+    } catch (e) {
+      console.warn('DemoWelcomeModal: localStorage.getItem failed — treating as already seen', e);
+      return;
+    }
     const demo = getDemoSession();
     if (!seen && !demo) {
       setOpen(true);
@@ -33,7 +39,11 @@ export default function DemoWelcomeModal() {
   React.useEffect(() => {
     function handleDemoStart() {
       if (getDemoSession()) {
-        localStorage.setItem(SEEN_KEY, '1');
+        try {
+          localStorage.setItem(SEEN_KEY, '1');
+        } catch (e) {
+          console.warn('DemoWelcomeModal: localStorage.setItem failed in demo handler', e);
+        }
         setOpen(false);
       }
     }
@@ -42,7 +52,13 @@ export default function DemoWelcomeModal() {
   }, []);
 
   function dismiss() {
-    localStorage.setItem(SEEN_KEY, '1');
+    try {
+      localStorage.setItem(SEEN_KEY, '1');
+    } catch (e) {
+      // Log storage failures (privacy mode / quota) — do not block UI flow
+      // eslint-disable-next-line no-console
+      console.warn('DemoWelcomeModal: localStorage.setItem failed in dismiss()', e);
+    }
     setOpen(false);
   }
 
