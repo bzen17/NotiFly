@@ -40,7 +40,6 @@ jobs:
 
       - name: Test
         run: npm test --prefix web -- run
-
       - name: Build
         run: npm run build --prefix web
         env:
