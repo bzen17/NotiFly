@@ -9,5 +9,5 @@
     "skipLibCheck": true,
     "types": ["node", "jest"]
   },
-  "include": ["src/**/*", "tests/**/*", "jest.config.js"]
+  "include": ["src/**/*"]
 }
