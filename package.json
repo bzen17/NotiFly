@@ -13,7 +13,8 @@
     "build:producer": "npm --prefix services/producer-service ci --include=dev && npm --prefix services/producer-service run build",
     "build:services": "npm run build:router && npm run build:worker-email && npm run build:producer",
     "build:all": "npm run build:libs && npm run build:services",
-    "package:single": "sh ./scripts/package-single.sh"
+    "package:single": "sh ./scripts/package-single.sh",
+    "verify:render": "sh ./scripts/verify-render-build.sh"
   },
   "devDependencies": {
     "@types/react": "^19.2.10",

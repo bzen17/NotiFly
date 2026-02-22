@@ -20,8 +20,8 @@ env:
   NODE_VERSION: '20'
 
 jobs:
-  format:
-    name: Format check
+  ci:
+    name: CI
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,20 +37,6 @@ jobs:
       - name: Check formatting (Prettier)
         run: npm run format:check
 
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install root dependencies
-        run: npm ci
-
       - name: Install workspace dependencies
         run: |
           npm ci --prefix libs/delivery-adapters
@@ -58,91 +44,42 @@ jobs:
           npm ci --prefix services/router-service
           npm ci --prefix services/worker-email
 
-      - name: Lint delivery-adapters
-        run: npm run lint --prefix libs/delivery-adapters
-
-      - name: Lint producer-service
-        run: npm run lint --prefix services/producer-service
-
-      - name: Lint router-service
-        run: npm run lint --prefix services/router-service
-
-      - name: Lint worker-email
-        run: npm run lint --prefix services/worker-email
-
-  typecheck:
-    name: Type check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install root dependencies
-        run: npm ci
-
-      - name: Install workspace dependencies
+      - name: Lint
         run: |
-          npm ci --prefix libs/delivery-adapters
-          npm ci --prefix services/producer-service
-          npm ci --prefix services/router-service
-          npm ci --prefix services/worker-email
-
-      - name: Build libs (required for local package imports)
-        run: npm run build:libs
-
-      - name: Typecheck delivery-adapters
-        run: npx tsc --noEmit --project libs/delivery-adapters/tsconfig.json
-
-      - name: Typecheck producer-service
-        run: npx tsc --noEmit --project services/producer-service/tsconfig.json
-
-      - name: Typecheck router-service
-        run: npx tsc --noEmit --project services/router-service/tsconfig.json
-
-      - name: Typecheck worker-email
-        run: npx tsc --noEmit --project services/worker-email/tsconfig.json
-
-  test:
-    name: Test - ${{ matrix.service }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - service: producer-service
-            dir: services/producer-service
-          - service: router-service
-            dir: services/router-service
-          - service: worker-email
-            dir: services/worker-email
-          - service: delivery-adapters
-            dir: libs/delivery-adapters
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: ${{ matrix.dir }}/package-lock.json
-
-      - name: Install root dependencies
-        run: npm ci
+          npm run lint --prefix libs/delivery-adapters
+          npm run lint --prefix services/producer-service
+          npm run lint --prefix services/router-service
+          npm run lint --prefix services/worker-email
 
       - name: Build libs
         run: npm run build:libs
 
-      - name: Install ${{ matrix.service }} dependencies
-        run: npm ci --prefix ${{ matrix.dir }}
+      - name: Type check
+        run: |
+          npx tsc --noEmit --project libs/delivery-adapters/tsconfig.json
+          npx tsc --noEmit --project services/producer-service/tsconfig.json
+          npx tsc --noEmit --project services/router-service/tsconfig.json
+          npx tsc --noEmit --project services/worker-email/tsconfig.json
 
-      - name: Run tests with coverage
-        run: >
-          npm test --prefix ${{ matrix.dir }} --
-          --coverage
-          --coverageReporters=text-summary
-          --coverageReporters=json-summary
-          --passWithNoTests
+      - name: Test
+        run: |
+          for dir in libs/delivery-adapters services/producer-service services/router-service services/worker-email; do
+            npm test --prefix $dir -- --coverage --coverageReporters=text-summary --coverageReporters=json-summary --passWithNoTests
+          done
+
+      - name: Render build verification
+        if: github.base_ref == 'main'
+        run: |
+          npm run build:all
+          chmod +x scripts/package-single.sh
+          ./scripts/package-single.sh
+          for path in \
+            "services/producer-service/dist/index.js" \
+            "services/producer-service/router-service/dist/index.js" \
+            "services/producer-service/worker-email/dist/index.js"; do
+            if [ ! -f "$path" ]; then
+              echo "❌ Missing: $path"
+              exit 1
+            fi
+            echo "✅ Found: $path"
+          done
