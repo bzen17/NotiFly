@@ -76,13 +76,13 @@ export default function DemoWelcomeModal() {
           <NotificationsActiveIcon color="primary" sx={{ fontSize: 26 }} />
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-              Welcome to NotiFly
+              Welcome to notifly
             </Typography>
             <Chip
               label="Multi-channel notifications, delivered at scale"
               size="small"
               color="primary"
-              variant='outlined'
+              variant="outlined"
               sx={{ mt: 0.5, fontSize: '0.65rem' }}
             />
           </Box>
