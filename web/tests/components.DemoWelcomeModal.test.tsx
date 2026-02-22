@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, act, fireEvent } from '@testing-library/react';
+import { render, screen, act, fireEvent, waitFor } from '@testing-library/react';
 import { vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('../lib/demoAuth', () => ({
@@ -46,7 +46,7 @@ describe('DemoWelcomeModal', () => {
     const dismissBtn = screen.getByRole('button', { name: /got it/i });
     fireEvent.click(dismissBtn);
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(localStorage.getItem(SEEN_KEY)).toBe('1');
   });
 
@@ -59,7 +59,7 @@ describe('DemoWelcomeModal', () => {
       window.dispatchEvent(new Event('demoAuthChanged'));
     });
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(localStorage.getItem(SEEN_KEY)).toBe('1');
   });
 
@@ -95,7 +95,7 @@ describe('DemoWelcomeModal', () => {
     const dismissBtn = screen.getByRole('button', { name: /got it/i });
     fireEvent.click(dismissBtn);
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     vi.restoreAllMocks();
   });
 
@@ -112,7 +112,7 @@ describe('DemoWelcomeModal', () => {
       window.dispatchEvent(new Event('demoAuthChanged'));
     });
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     vi.restoreAllMocks();
   });
 });
