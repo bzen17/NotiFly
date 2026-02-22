@@ -15,7 +15,7 @@ env:
 
 jobs:
   ci:
-    name: CI
+    name: CI - Frontend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
