@@ -2,7 +2,7 @@ name: Copilot PR Review
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, reopened]
 
 permissions:
   pull-requests: write
@@ -13,15 +13,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Ask Copilot to review PR
+      - name: Request Copilot code review
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.DISPATCH_PAT }}
           script: |
             const prNumber = context.payload.pull_request.number;
-            await github.rest.issues.createComment({
+            // Adds Copilot as a reviewer — triggers its native inline code review
+            // with per-line comments and severity labels (critical/suggestion/nit).
+            // Does NOT create commits or new PRs.
+            await github.rest.pulls.requestReviewers({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: prNumber,
-              body: `@copilot review (See <attachments> above for file contents. You may not need to search or read the file again.)`
+              pull_number: prNumber,
+              reviewers: ['copilot'],
             });

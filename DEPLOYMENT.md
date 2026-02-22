@@ -8,7 +8,47 @@ This document explains how to deploy the Notifly monorepo using free-tier servic
 - Postgres: Neon (serverless Postgres)
 - MongoDB: MongoDB Atlas (free tier)
 
-IMPORTANT RULES
+## Pre-deployment verification
+
+**IMPORTANT**: Run this command locally before pushing to main to verify the build will succeed on Render:
+
+```bash
+npm run verify:render
+```
+
+This script:
+
+- Cleans previous builds
+- Runs the exact Render build command sequence
+- Verifies all build artifacts exist in the correct locations
+- Checks that the start command entry point is valid
+
+If all checks pass, you're safe to deploy to Render.
+
+## Render build configuration
+
+The services use a **single-service deployment** strategy where all microservices are packaged into the producer-service.
+
+### Build Command (as configured on Render):
+
+```bash
+npm install && npm run build:all && chmod +x scripts/package-single.sh && ./scripts/package-single.sh
+```
+
+### Start Command (as configured on Render):
+
+```bash
+node services/producer-service/dist/index.js
+```
+
+The build process:
+
+1. `npm install` - Installs root workspace dependencies
+2. `npm run build:all` - Builds libs and all services (router, worker-email, producer)
+3. `./scripts/package-single.sh` - Packages router-service and worker-email into producer-service directory
+4. Producer service bootstraps and spawns the other services as child processes
+
+## IMPORTANT RULES
 
 - `libs/delivery-adapters` is a library only and must NOT be deployed as a service.
 - `router-service` and `worker-email` are background workers and MUST NOT expose HTTP ports.
